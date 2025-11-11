@@ -72,18 +72,23 @@
                             <?php 
                             $nro=1;
                             $query = mysqli_query($mysqli, "SELECT
-                            pro.cod_producto AS cod_producto,
-                            pro.cod_tipo_prod AS cod_tipo_prod,
-                            pro.id_u_medida AS id_u_medida,
+                            pro.id_producto AS id_producto,
+                            m.id_marca AS id_marca,
+                            uni.id_u_medida AS id_u_medida,
                             pro.p_descrip AS p_descrip,
-                            pro.precio AS precio,
-                            tipo.t_p_descrip AS t_p_descrip,
-                            uni.u_descrip AS u_descrip
-                            FROM producto pro
-                            JOIN tipo_producto tipo
+                            pro.p_precio_servicio AS p_precio_servicio,
+                            pro.p_costo_actual AS p_costo_actual,
+                            prov.cod_proveedor AS cod_proveedor 
+                            FROM productos pro
+                            JOIN proveedor prov
+                            JOIN marcas m
                             JOIN u_medida uni
-                            WHERE pro.cod_tipo_prod = tipo.cod_tipo_prod
-                            AND pro.id_u_medida = uni.id_u_medida;")
+                            WHERE 
+                              pro.cod_proveedor = prov.cod_proveedor
+
+                            AND pro.id_u_medida = uni.id_u_medida
+
+                            AND pro.id_marca = m.id_marca;")
                             or die('Error'.mysqli_error($mysqli));
                             while($data = mysqli_fetch_assoc($query)){
                                $cod_producto = $data["cod_producto"];

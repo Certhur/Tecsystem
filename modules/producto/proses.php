@@ -14,8 +14,8 @@ else {
             $p_precio_servicio = $_POST["p_precio_servicio"];
             $p_costo_actual = $_POST["p_costo_actual"];
             $cod_proveedor = $_POST["cod_proveedor"];
-            $query = mysqli_query($mysqli, "INSERT INTO producto(id_producto,id_marca,id_u_medida,p_descrip,p_precio_servicio)
-            VALUES ($id_producto,'$id_marca','$id_u_medida','$p_descrip','$p_precio_servicio');") or die('Error'.mysqli_error($mysqli));
+            $query = mysqli_query($mysqli, "INSERT INTO productos(id_producto,id_marca,id_u_medida,p_descrip,p_precio_servicio,p_costo_actual,cod_proveedor)
+            VALUES ($id_producto,'$id_marca','$id_u_medida','$p_descrip','$p_precio_servicio','$p_costo_actual','$cod_proveedor');") or die('Error'.mysqli_error($mysqli));
             if($query){
                 header("Location: ../../main.php?module=producto&alert=1");
             } else {
@@ -31,11 +31,15 @@ else {
                 $id_u_medida = $_POST["id_u_medida"];
                 $p_descrip = $_POST["p_descrip"];
                 $p_precio_servicio = $_POST["p_precio_servicio"];
-                $query = mysqli_query($mysqli, "UPDATE producto SET 
+                $p_costo_actual = $_POST["p_costo_actual"];
+                $cod_proveedor = $_POST["cod_proveedor"];
+                $query = mysqli_query($mysqli, "UPDATE productos SET 
                 id_marca = '$id_marca',
                 id_u_medida = '$id_u_medida',
                 p_descrip = '$p_descrip',
-                p_precio_servicio = '$p_precio_servicio' 
+                p_precio_servicio = '$p_precio_servicio',
+                p_costo_actual = '$p_costo_actual',
+                cod_proveedor = '$cod_proveedor'
                 WHERE id_producto = $id_producto;")
                 or die('Error'.mysqli_error($mysqli));
                 if($query){
@@ -49,7 +53,7 @@ else {
     elseif($_GET["act"]=="delete"){
         if(isset($_GET["id_producto"])){
             $id_producto = $_GET["id_producto"];
-            $query = mysqli_query($mysqli, "DELETE FROM producto WHERE id_producto = $id_producto;")
+            $query = mysqli_query($mysqli, "DELETE FROM productos WHERE id_producto = $id_producto;")
             or die('Error'.mysqli_error($mysqli));
             if($query){
                 header("Location: ../../main.php?module=producto&alert=3");

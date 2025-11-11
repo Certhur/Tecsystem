@@ -6,7 +6,7 @@
       </h1>
       <ol class="breadcrumb">
         <li><a href="?module=start"><i class="fa fa-home"></i>Inicio</a></li>
-        <li><a href="?module=deposito">Producto</a></li>
+        <li><a href="?module=producto">Producto</a></li>
         <li class="active">Más</li>
       </ol>
       </section>      
