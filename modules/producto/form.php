@@ -17,7 +17,7 @@
                     <form role="form" class="form-horizontal" action="modules/producto/proses.php?act=insert" method="POST">
                         <div class="box-body">
                             <?php
-                                $query_id = mysqli_query($mysqli, "SELECT MAX(cod_producto) as id FROM producto;")
+                                $query_id = mysqli_query($mysqli, "SELECT MAX(id_producto) as id FROM productos;")
                                 or die('Error'.mysqli_error($mysqli));
                                 $count = mysqli_num_rows($query_id);  
                                 if($count <> 0){
@@ -30,7 +30,7 @@
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">Código</label>
                                 <div class="col-sm-5">
-                                    <input type="text" class="form-control" name="cod_producto" value="<?php echo $codigo; ?>" readonly>
+                                    <input type="text" class="form-control" name="id_producto" value="<?php echo $codigo; ?>" readonly>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -82,6 +82,10 @@
                                 <div class="col-sm-5">
                                     <input type="number" class="form-control" name="precio" placeholder="Ingrese el precio" required>
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Precio Final</label>
+                                <input type="number" class="form-control" name=">
                             </div>
                             <div class="box-footer">
                                 <div class="form-group">

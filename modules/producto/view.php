@@ -5,8 +5,7 @@
 </ol><br><hr>
 <h1>
     <i class="fa fa-folder icon-title"></i>Registros de Producto
-    <a class="btn btn-primary btn-social pull-right" href="?module=form_producto&form=add" title="Agregar" data-toggle="tooltip">
-        <i class="fa fa-plus"></i>Agregar</a>
+   
 </h1>
 </section">
 <section class="content">
@@ -61,10 +60,12 @@
                         <thead>
                             <tr>
                                 <th>Código</th>
-                                <th>Tipo de producto</th>
                                 <th>Unidad de Medida</th>
+                                <th>Proveedor</th>
+                                <th>Marca</th>
                                 <th>Producto</th>
                                 <th>Precio</th>
+                                <th>Precio Final</th>
                                 <th>Acción</th>
                             </tr>
                         </thead>
@@ -99,9 +100,9 @@
                                $id_u_medida = $data["id_u_medida"];
                                echo "<tr>
                                <td class=''>$cod_producto</td>
-                               <td class=''>$t_p_descrip</td>
-                               <td class=''>$u_descrip</td>
                                <td class=''>$p_descrip</td>
+                               <td class=''>$u_descrip</td>
+                               
                                <td class=''>$precio</td>
                                <td class='' width='80'>
                                <div>
