@@ -34,25 +34,6 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Tipo de Producto</label>
-                                <div class="col-sm-5">
-                                    <select name="cod_tipo_prod" class="form-control">
-                                        <option value="">Seleccione el tipo de producto</option>
-                                        <?php 
-                                            $query = mysqli_query($mysqli, "SELECT * FROM tipo_producto;")or die('Error'.mysqli_error($mysqli));
-                                            while($data = mysqli_fetch_assoc($query)){
-                                            echo "<option value='".$data['cod_tipo_prod']."'";
-                                            if($_POST['cod_tipo_prod']==$data['cod_tipo_prod'])
-                                            echo "SELECTED";
-                                            echo ">";
-                                            echo $data['t_p_descrip'];
-                                            echo "</option>";
-                                            }
-                                        ?>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group">
                                 <label class="col-sm-2 control-label">Unidad de Medida</label>
                                 <div class="col-sm-5">
                                     <select name="id_u_medida" class="form-control">
@@ -72,6 +53,20 @@
                                 </div>
                             </div>
                             <div class="form-group">
+                                <label class="col-sm-2 control-label">Marca</label>
+                                <div class="col-sm-5">
+                                    <option value="">Selecciona la Marca</option>
+                                    <?php 
+                                        $query = mysqli_query($mysqli, "SELECT * FROM marca;")or die('Error'.mysqli_error($mysqli));
+                                        while($data = mysqli_fetch_assoc($query)){
+                                            echo "<option value='".$data['id_marca']."'";
+                                            
+                                        }
+
+                                    ?>
+                                </div>
+                            </div>
+                            <div class="form-group">
                                 <label class="col-sm-2 control-label">Nombre Producto</label>
                                 <div class="col-sm-5">
                                     <input type="text" class="form-control" name="p_descrip" placeholder="Ingrese el nombre del producto" required>
@@ -84,13 +79,15 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Precio Final</label>
-                                <input type="number" class="form-control" name=">
+                                <label class="col-sm-2 control-label">Precio Servicio</label>
+                                <div class="col-sm-5">
+                                    <input type="number" class="form-control" name="p_precio_servicio" placeholder="Ingrese el precio" required>
+                                </div>
                             </div>
                             <div class="box-footer">
                                 <div class="form-group">
                                     <div class="col-sm-offset-2 col-sm-10">
-                                        <input type="submit" class="btn btn-primary btn-submit" name="Guardar" value="Guardar" title="Guardar Datos" onclick="return confirm('Guardar Datos ?')";>
+                                        <input type="submit" class="btn btn-primary btn-submit" name="Guardar" value="Guardar" title="Guardar Datos" onclick="return confirm('Guardar Datos ?');">
                                         <a href="?module=producto" class="btn btn-default btn-reset" title="Cancelar la operación">Cancelar</a>
                                     </div>
                                 </div>

@@ -5,7 +5,9 @@
 </ol><br><hr>
 <h1>
     <i class="fa fa-folder icon-title"></i>Registros de Producto
-   
+    <a class="btn btn-primary btn-social pull-right" href="?module=form_producto&form=add" title="Agregar" data-toggle="tooltip">
+            <i class="fa fa-plus"></i>Agregar
+    </a>
 </h1>
 </section">
 <section class="content">
@@ -93,17 +95,20 @@
                             or die('Error'.mysqli_error($mysqli));
                             while($data = mysqli_fetch_assoc($query)){
                                $cod_producto = $data["cod_producto"];
-                               $p_descrip = $data["p_descrip"];
-                               $precio = $data["precio"];
-                               $t_p_descrip = $data["t_p_descrip"];
-                               $u_descrip = $data["u_descrip"];
                                $id_u_medida = $data["id_u_medida"];
+                               $id_proveedor = $data["cod_proveedor"];
+                               $id_marca = $data["id_marca"];
+                               $p_descrip = $data["p_descrip"];
+                               $precio = $data["p_costo_actual"];
+                               $precio_final = $data["p_precio_servicio"];
                                echo "<tr>
                                <td class=''>$cod_producto</td>
+                               <td class=''>$id_u_medida</td>
+                               <td class=''>$id_proveedor</td>
+                               <td class=''>$id_marca</td>
                                <td class=''>$p_descrip</td>
-                               <td class=''>$u_descrip</td>
-                               
                                <td class=''>$precio</td>
+                               <td class=''>$precio_final</td>
                                <td class='' width='80'>
                                <div>
                                <a data-toggle='tooltip' data-placement='top' title='Modificar datos de Proveedor' style='margin-right:5px' 
