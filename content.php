@@ -121,12 +121,12 @@ if(empty($_SESSION["username"]) && empty($_SESSION["password"])){
         include "modules/proveedor/form.php";
     }
 
-    // elseif($_GET["module"]=="unidad_medida"){
-    //     include "modules/unidad_medida/view.php";
-    // }
-    // elseif($_GET["module"]=="form_unidad_medida"){
-    //     include "modules/unidad_medida/form.php";
-    // }
+    elseif($_GET["module"]=="unidad_medida"){
+         include "modules/unidad_medida/view.php";
+        }
+    elseif($_GET["module"]=="form_unidad_medida"){
+         include "modules/unidad_medida/form.php";
+         }
 
 
     elseif($_GET["module"]=="producto"){

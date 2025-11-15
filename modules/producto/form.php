@@ -42,8 +42,8 @@
                                             $query = mysqli_query($mysqli, "SELECT * FROM u_medida;")or die('Error'.mysqli_error($mysqli));
                                             while($data = mysqli_fetch_assoc($query)){
                                             echo "<option value='".$data['id_u_medida']."'";
-                                            if($_POST['id_u_medida']==$data['id_u_medida'])
-                                            echo "SELECTED";
+                                            if(isset($_POST['id_u_medida']) && $_POST['id_u_medida']==$data['id_u_medida'])
+                                            echo "selected";
                                             echo ">";
                                             echo $data['u_descrip'];
                                             echo "</option>";
@@ -55,19 +55,25 @@
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">Marca</label>
                                 <div class="col-sm-5">
-                                    <option value="">Selecciona la Marca</option>
-                                    <?php 
-                                        $query = mysqli_query($mysqli, "SELECT * FROM marca;")or die('Error'.mysqli_error($mysqli));
-                                        while($data = mysqli_fetch_assoc($query)){
-                                            echo "<option value='".$data['id_marca']."'";
-                                            
-                                        }
-
-                                    ?>
+                                    <select name="id_marca" id="" class="form-control">      
+                                        <option value="">Selecciona la Marca</option>
+                                            <?php 
+                                                $query = mysqli_query($mysqli, "SELECT * FROM marcas;")or die('Error'.mysqli_error($mysqli));
+                                                while($data = mysqli_fetch_assoc($query)){
+                                                    echo "<option value='".$data['id_marca']."'";
+                                                    /*if($_POST['id_marca']==$data['id_marca'])*/
+                                                    if (isset($_POST['id_marca']) && $_POST['id_marca'] == $data['id_marca'])
+                                                    echo "selected";
+                                                    echo ">";
+                                                    echo $data['marca_descrip'];
+                                                    echo "</option>";
+                                                }
+                                            ?>
+                                    </select>    
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Nombre Producto</label>
+                                <label class="col-sm-2 control-label">Producto</label>
                                 <div class="col-sm-5">
                                     <input type="text" class="form-control" name="p_descrip" placeholder="Ingrese el nombre del producto" required>
                                 </div>
@@ -98,7 +104,7 @@
             </div>
         </div>
       </section>
-    <?php }
+    <?php } 
     elseif($_GET["form"]=="edit"){
       if(isset($_GET["id"])){
           $query = mysqli_query($mysqli, "SELECT * FROM producto WHERE cod_producto = '$_GET[id]';")or die('Error'.mysqli_error($mysqli));
