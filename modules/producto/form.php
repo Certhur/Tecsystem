@@ -37,7 +37,7 @@
                                 <label class="col-sm-2 control-label">Unidad de Medida</label>
                                 <div class="col-sm-5">
                                     <select name="id_u_medida" class="form-control">
-                                        <option value="">Selecciones la unidad de medida</option>
+                                        <option value="">Seleccione la unidad de medida</option>
                                         <?php 
                                             $query = mysqli_query($mysqli, "SELECT * FROM u_medida;")or die('Error'.mysqli_error($mysqli));
                                             while($data = mysqli_fetch_assoc($query)){
@@ -46,6 +46,25 @@
                                             echo "selected";
                                             echo ">";
                                             echo $data['u_descrip'];
+                                            echo "</option>";
+                                            }                    
+                                        ?>
+                                    </select>
+                                </div>
+                            </div>
+                                <div class="form-group">
+                                <label class="col-sm-2 control-label">Proveedor</label>
+                                <div class="col-sm-5">
+                                    <select name="cod_proveedor" class="form-control">
+                                        <option value="">Seleccione el Proveedor</option>
+                                        <?php 
+                                            $query = mysqli_query($mysqli, "SELECT * FROM proveedor;")or die('Error'.mysqli_error($mysqli));
+                                            while($data = mysqli_fetch_assoc($query)){
+                                            echo "<option value='".$data['cod_proveedor']."'";
+                                            if(isset($_POST['cod_proveedor']) && $_POST['cod_proveedor']==$data['cod_proveedor'])
+                                            echo "selected";
+                                            echo ">";
+                                            echo $data['razon_social'];
                                             echo "</option>";
                                             }                    
                                         ?>
@@ -81,7 +100,7 @@
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">Precio</label>
                                 <div class="col-sm-5">
-                                    <input type="number" class="form-control" name="precio" placeholder="Ingrese el precio" required>
+                                    <input type="number" class="form-control" name="p_costo_actual" placeholder="Ingrese el precio" required>
                                 </div>
                             </div>
                             <div class="form-group">

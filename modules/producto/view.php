@@ -78,6 +78,8 @@
                             pro.id_producto AS id_producto,
                             m.id_marca AS id_marca,
                             uni.id_u_medida AS id_u_medida,
+                            m.marca_descrip AS marca_descrip,
+                            uni.u_descrip AS u_descrip,
                             pro.p_descrip AS p_descrip,
                             pro.p_precio_servicio AS p_precio_servicio,
                             pro.p_costo_actual AS p_costo_actual,
@@ -94,29 +96,29 @@
                             AND pro.id_marca = m.id_marca;")
                             or die('Error'.mysqli_error($mysqli));
                             while($data = mysqli_fetch_assoc($query)){
-                               $cod_producto = $data["cod_producto"];
-                               $id_u_medida = $data["id_u_medida"];
-                               $id_proveedor = $data["cod_proveedor"];
-                               $id_marca = $data["id_marca"];
+                               $id_producto = $data["id_producto"];
+                               $u_descrip = $data["u_descrip"];
+                               $p_descrip = $data["p_descrip"];
+                               $marca_descrip = $data["marca_descrip"];
                                $p_descrip = $data["p_descrip"];
                                $precio = $data["p_costo_actual"];
                                $precio_final = $data["p_precio_servicio"];
                                echo "<tr>
-                               <td class=''>$cod_producto</td>
-                               <td class=''>$id_u_medida</td>
-                               <td class=''>$id_proveedor</td>
-                               <td class=''>$id_marca</td>
+                               <td class=''>$id_producto</td>
+                               <td class=''>$u_descrip</td>
+                               <td class=''>$p_descrip</td>
+                               <td class=''>$marca_descrip</td>
                                <td class=''>$p_descrip</td>
                                <td class=''>$precio</td>
                                <td class=''>$precio_final</td>
                                <td class='' width='80'>
                                <div>
                                <a data-toggle='tooltip' data-placement='top' title='Modificar datos de Proveedor' style='margin-right:5px' 
-                               class='btn btn-primary btn-sm' href='?module=form_producto&form=edit&id=$data[cod_producto]&idMedida=$data[id_u_medida]'>
+                               class='btn btn-primary btn-sm' href='?module=form_producto&form=edit&id=$data[id_producto]&idMedida=$data[id_u_medida]'>
                                 <i class='glyphicon glyphicon-edit' style='color:#fff'></i></a>";
                                 ?>
                                 <a data-toggle="tooltip" data-data-placement="top" title="Eliminar datos" class="btn btn-danger btn-sm" 
-                                href="modules/producto/proses.php?act=delete&cod_producto=<?php echo $data['cod_producto']; ?>"
+                                href="modules/producto/proses.php?act=delete&id_producto=<?php echo $data['id_producto']; ?>"
                                 onclick="return confirm('Eliminar Producto ? <?php echo $data['p_descrip']; ?>')">
                                 <i class="glyphicon glyphicon-trash"></i>
                                 </a>
