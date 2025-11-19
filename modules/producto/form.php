@@ -125,8 +125,8 @@
       </section>
     <?php } 
     elseif($_GET["form"]=="edit"){
-      if(isset($_GET["id"])){
-          $query = mysqli_query($mysqli, "SELECT * FROM producto WHERE cod_producto = '$_GET[id]';")or die('Error'.mysqli_error($mysqli));
+      if(isset($_GET["id_producto"])){
+          $query = mysqli_query($mysqli, "SELECT * FROM productos WHERE id_producto = '$_GET[id_producto]';")or die('Error'.mysqli_error($mysqli));
           $data = mysqli_fetch_assoc($query);                                          
       }?> 
     <section class="content-header">
@@ -148,31 +148,11 @@
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">Código</label>
                                 <div class="col-sm-5">
-                                    <input type="text" class="form-control" name="cod_producto" value="<?php echo $data['cod_producto']; ?>" readonly>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Tipo de producto</label>
-                                <div class="col-sm-5">
-                                    <select name="cod_tipo_prod" class="form-control">
-                                        <option value="<?php echo $data['cod_tipo_prod'] ?>"><?php echo $data['p_descrip'] ?></option>
-                                        <?php 
-                                            $query = mysqli_query($mysqli, "SELECT * FROM tipo_producto;")
-                                            or die('Error'.mysqli_error($mysqli));
-                                            while($data2 = mysqli_fetch_assoc($query)){
-                                                echo "<option value='".$data2['cod_tipo_prod']."'";
-                                                if($_POST['cod_tipo_prod']==$data2['cod_tipo_prod'])
-                                                echo "SELECTED";
-                                                echo ">";
-                                                echo $data2['t_p_descrip'];
-                                                echo "</option>";
-                                            }                    
-                                        ?>
-                                    </select>
+                                    <input type="text" class="form-control" name="id_producto" value="<?php echo $data['id_producto']; ?>" readonly>
                                 </div>
                             </div>
                             <?php
-                                $queryUnidadMedida = mysqli_query($mysqli, "SELECT * FROM u_medida WHERE id_u_medida='$_GET[idMedida]';")
+                                $queryUnidadMedida = mysqli_query($mysqli, "SELECT * FROM u_medida WHERE id_u_medida='$_GET[id_u_medida]';")
                                 or die('Error'.mysqli_error($mysqli));
                                 $dataUnidadMedida = mysqli_fetch_assoc($queryUnidadMedida);
                                 // echo "id_u_medida == >". $_GET['idMedida'];
@@ -187,7 +167,7 @@
                                             $query = mysqli_query($mysqli, "SELECT * FROM u_medida;")or die('Error'.mysqli_error($mysqli));
                                             while($data2 = mysqli_fetch_assoc($query)){
                                                 echo "<option value='".$data2['id_u_medida']."'";
-                                                if($_POST['id_u_medida']==$data2['id_u_medida'])
+                                                if(isset($_POST['id_u_medida']) && $_POST['id_u_medida']==$data2['id_u_medida'])
                                                 echo "SELECTED";
                                                 echo ">";
                                                 echo $data2['u_descrip'];
@@ -197,16 +177,70 @@
                                     </select>
                                 </div>
                             </div>
+                            <?php
+                                $queryProveedor = mysqli_query($mysqli, "SELECT * FROM proveedor WHERE cod_proveedor='$_GET[cod_proveedor]';")
+                                or die('Error'.mysqli_error($mysqli));
+                                $dataProveedor = mysqli_fetch_assoc($queryProveedor);
+                            ?>
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Descripción del producto</label>
+                                <label class="col-sm-2 control-label">Proveedor</label>
                                 <div class="col-sm-5">
-                                    <input type="text" class="form-control" name="p_descrip" value="<?php echo $data['p_descrip']; ?>" autofocus required>
+                                    <select name="cod_proveedor" class="form-control">
+                                        <option value="<?php echo $data['cod_proveedor'] ?>"><?php echo $dataProveedor['razon_social'] ?></option>
+                                        <?php
+                                            $query = mysqli_query($mysqli, "SELECT * FROM proveedor;")or die('Error'.mysqli_error($mysqli));
+                                            while($data2 = mysqli_fetch_assoc($query)){
+                                                echo "<option value='".$data2['cod_proveedor']."'";
+                                                if(isset($_POST['cod_proveedor']) && $_POST['cod_proveedor']==$data2['cod_proveedor'])
+                                                echo "SELECTED";
+                                                echo ">";
+                                                echo $data2['razon_social'];
+                                                echo "</option>";
+                                            }                    
+                                        ?>
+                                    </select>
+                                </div>
+                            </div>
+                             <?php
+                                $queryMarca = mysqli_query($mysqli, "SELECT * FROM marcas WHERE id_marca='$_GET[id_marca]';")
+                                or die('Error'.mysqli_error($mysqli));
+                                $dataMarca = mysqli_fetch_assoc($queryMarca);
+                            ?>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Marca</label>
+                                <div class="col-sm-5">
+                                    <select name="id_marca" class="form-control">
+                                        <option value="<?php echo $data['id_marca'] ?>"><?php echo $dataMarca['marca_descrip'] ?></option>
+                                        <?php
+                                            $query = mysqli_query($mysqli, "SELECT * FROM marcas;")or die('Error'.mysqli_error($mysqli));
+                                            while($data2 = mysqli_fetch_assoc($query)){
+                                                echo "<option value='".$data2['id_marca']."'";
+                                                if(isset($_POST['id_marca']) && $_POST['id_marca']==$data2['id_marca'])
+                                                echo "SELECTED";
+                                                echo ">";
+                                                echo $data2['marca_descrip'];
+                                                echo "</option>";
+                                            }                    
+                                        ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Producto</label>
+                                <div class="col-sm-5">
+                                    <input type="text" class="form-control" name="p_descrip" value="<?php echo $data['p_descrip']; ?>" required>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">Precio</label>
                                 <div class="col-sm-5">
-                                    <input type="number" class="form-control" name="precio" value="<?php echo $data['precio']; ?>" autofocus required>
+                                    <input type="number" class="form-control" name="p_costo_actual" value="<?php echo $data['p_costo_actual']; ?>" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Precio Servicio</label>
+                                <div class="col-sm-5">
+                                    <input type="number" class="form-control" name="p_precio_servicio" value="<?php echo $data['p_precio_servicio']; ?>" required>
                                 </div>
                             </div>
                             <div class="box-footer">

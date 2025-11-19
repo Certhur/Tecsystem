@@ -114,7 +114,7 @@
                                <td class='' width='80'>
                                <div>
                                <a data-toggle='tooltip' data-placement='top' title='Modificar datos de Proveedor' style='margin-right:5px' 
-                               class='btn btn-primary btn-sm' href='?module=form_producto&form=edit&id=$data[id_producto]&idMedida=$data[id_u_medida]'>
+                               class='btn btn-primary btn-sm' href='?module=form_producto&form=edit&id_producto=$data[id_producto]&id_u_medida=$data[id_u_medida]&id_marca=$data[id_marca]&cod_proveedor=$data[cod_proveedor]'>
                                 <i class='glyphicon glyphicon-edit' style='color:#fff'></i></a>";
                                 ?>
                                 <a data-toggle="tooltip" data-data-placement="top" title="Eliminar datos" class="btn btn-danger btn-sm" 
