@@ -141,6 +141,12 @@ if(empty($_SESSION["username"]) && empty($_SESSION["password"])){
     elseif($_GET["module"]=="form_recepcion_equipo"){
         include "modules/recepcion_equipo/form.php";
     }
+    elseif($_GET["module"]=="form_diagnostico"){
+        include "modules/diagnostico/form.php";
+    }
+    elseif($_GET["module"]=="diagnostico"){
+        include "modules/diagnostico/view.php";
+    }
 }
 
 ?>
