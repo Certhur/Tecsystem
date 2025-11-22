@@ -2,7 +2,7 @@
 if ($_GET['form'] == 'add') { ?>
     <section class="content-header">
         <h1>
-            <i class="fa fa-edit icon-title">Agregar Recepcion de Equipo</i>
+            <i class="fa fa-edit icon-title">Agregar Diagnstico</i>
         </h1>
         <ol class="breadcrumb">
             <li><a href="?module=start"><i class="fa fa-home"></i>Inicio</a></li>
@@ -15,24 +15,30 @@ if ($_GET['form'] == 'add') { ?>
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-primary">
-                    <form role="form" class="form-horizontal" action="modules/recepcion_equipo/proses.php?accion=insertar" method="POST">
+                    <form role="form" class="form-horizontal" action="modules/diagnostico/proses.php?accion=insertar" method="POST">
                         <div class="box-body">
 
 
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Fecha Recepcion : </label>
+                                <label class="col-sm-2 control-label">Fecha Diagnostico : </label>
                                 <div class="col-sm-5">
-                                    <input type="date" class="form-control" name="fecha_recepcion" id="fecha_recepcion" autocomplete="off" readonly>
+                                    <input type="date" class="form-control" name="fecha_diagnostico" id="fecha_diagnostico" autocomplete="off" readonly>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Recepcion: </label>
+                                <div class="col-sm-5">
+                                <select class="chosen-select" id="recepcion" name="recepcion" autocomplete="off" onchange="abrirModalSiEsAgregar(this)" required>
+                                </select>
                                 </div>
                             </div>
 
-                            <!-- buscador cliente -->
+                             <!-- buscador cliente -->
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">Cliente : </label>
                                 <div class="col-sm-5">
-                                    <!-- select -->
-                                    <select class="chosen-select" id="cliente" name="cliente" onchange="abrirModalSiEsAgregar(this)" autocomplete="off" required>
-                                    </select>
+                                    <input type="text" class="form-control" id="name" name="cliente" autocomplete="off" readonly>
                                 </div>
                             </div>
 
@@ -40,10 +46,7 @@ if ($_GET['form'] == 'add') { ?>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">Marca : </label>
                                 <div class="col-sm-5">
-                                    <!-- select -->
-                                    <select class="chosen-select" id="marca" name="marca" autocomplete="off" onchange="abrirModalSiEsAgregar(this)" required>
-
-                                    </select>
+                                    <input type="text" class="form-control" id="marca" name="marca" autocomplete="off" readonly>
                                 </div>
                             </div>
 
@@ -53,8 +56,7 @@ if ($_GET['form'] == 'add') { ?>
                                 <label class="col-sm-2 control-label">Tipo Equipo : </label>
                                 <div class="col-sm-5">
                                     <!-- select -->
-                                    <select class="chosen-select" id="tipo_equipo" name="tipo_equipo" autocomplete="off" onchange="abrirModalSiEsAgregar(this)" required>
-                                    </select>
+                                    <input type="text" class="form-control" id="tipo_equipo" name="tipo_equipo" autocomplete="off" readonly>
                                 </div>
                             </div>
 
@@ -62,16 +64,43 @@ if ($_GET['form'] == 'add') { ?>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">Modelo : </label>
                                 <div class="col-sm-5">
-                                    <input type="text" class="form-control" name="modelo" placeholder="Ingrese el Modelo" autocomplete="off">
+                                    <input type="text" class="form-control" id="modelo" name="modelo" autocomplete="off" readonly>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">Descripcion : </label>
                                 <div class="col-sm-5">
-                                    <textarea type="text" class="form-control" name="descripcion" placeholder="Ingrese la descripcion del equipo" autocomplete="off"></textarea>
+                                    <textarea type="text" class="form-control" id="descripcion" name="descripcion" autocomplete="off" readonly></textarea>
                                 </div>
                             </div>
 
+                             <!-- buscador tipo servicio -->
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Tipo Servicio : </label>
+                                <div class="col-sm-5">
+                                    <!-- select -->
+                                    <select class="chosen-select" id="tipo_servicio" name="tipo_servicio" autocomplete="off" onchange="abrirModalSiEsAgregar(this)" required>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Falla : </label>
+                                <div class="col-sm-5">
+                                    <textarea type="text" class="form-control" id="falla_diagnostico" name="falla_diagnostico" placeholder="Ingrese la descripcion del equipo" autocomplete="off"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Causa : </label>
+                                <div class="col-sm-5">
+                                    <textarea type="text" class="form-control" id="causa_diagnostico" name="causa_diagnostico" placeholder="Ingrese la descripcion del equipo" autocomplete="off"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Solucion : </label>
+                                <div class="col-sm-5">
+                                    <textarea type="text" class="form-control" id="solucion_diagnostico"name="solucion_diagnostico" placeholder="Ingrese la descripcion del equipo" autocomplete="off"></textarea>
+                                </div>
+                            </div>
                             <div class="box-footer">
                                 <div class="form-group">
                                     <div class="col-sm-offset-2 col-sm-10">
@@ -86,61 +115,10 @@ if ($_GET['form'] == 'add') { ?>
             </div>
         </div>
 
-        <!-- ********************************************** Modal Agregar Marca *************************************************** -->
-        <div class="modal fade" id="modalAgregarMarca" tabindex="-1" role="dialog" aria-labelledby="modalAgregarMarcaLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalAgregarMarcaLabel">Agregar Nueva Marca</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <form id="formAgregarMarca" method="POST">
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <label for="nuevaMarca">Nombre de la Marca</label>
-                                <input type="text" class="form-control" id="nuevaMarca" name="nuevaMarca" placeholder="Ingrese el nombre de la nueva marca" required>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Guardar Marca</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-               <!-- ********************************************** Modal Agregar Tipo Equipo *************************************************** -->
-               <div class="modal fade" id="modalAgregarTipoEquipo" tabindex="-1" role="dialog" aria-labelledby="modalAgregarTipoEquipo" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalAgregarTipoEquipoLabel">Agregar Nuevo Tipo de Equipo</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <form id="formAgregarTipoEquipo" method="POST">
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <label for="nuevoTipoEquipo">Nombre del Tipo de Equipo</label>
-                                <input type="text" class="form-control" id="nuevoTipoEquipo" name="nuevoTipoEquipo" placeholder="Ingrese el nombre del nuevo tipo de equipo" required>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Guardar Tipo de Equipo</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
 
         <!-- ********************************************** Modal Agregar Cliente *************************************************** -->
 
-        <div class="modal fade" id="modalAgregarCliente" tabindex="-1" role="dialog" aria-labelledby="modalAgregarClienteLabel" aria-hidden="true">
+       <!-- <div class="modal fade" id="modalAgregarCliente" tabindex="-1" role="dialog" aria-labelledby="modalAgregarClienteLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -159,7 +137,7 @@ if ($_GET['form'] == 'add') { ?>
                                 <input type="text" class="form-control" id="ruc_ci" name="ruc_ci" placeholder="Ingrese el RUC o C.I del cliente" required>
                                 <label for="ciudad">Ciudad</label>
                                 <select class="chosen-select" name="ciudad" id="ciudad" data-placeholder="Seleccionar Ciudad" autocomplete="off" required>
-                                    <!-- Las opciones de ciudad se cargarán aquí mediante AJAX -->
+                                   //Las opciones de ciudad se cargarán aquí mediante AJAX
                                 </select>
                                 <label for="direccion">Dirección</label>
                                 <input type="text" class="form-control" id="direccion" name="direccion" placeholder="Ingrese la dirección" required>
@@ -176,7 +154,7 @@ if ($_GET['form'] == 'add') { ?>
                     </form>
                 </div>
             </div>
-        </div>
+        </div>-->
 
     </section>
     <!-- ********************************************** update *************************************************** -->
@@ -236,7 +214,7 @@ if ($_GET['form'] == 'add') { ?>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">Tipo Equipo : </label>
                                 <div class="col-sm-5">
-                                    <select class="chosen-select" id="tipo_equipo" name="tipo_equipo" autocomplete="off" required>
+                                    <select class="form-control" id="tipo_equipo" name="tipo_equipo" autocomplete="off" required>
 
                                     </select>
                                 </div>
@@ -245,14 +223,14 @@ if ($_GET['form'] == 'add') { ?>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">Modelo : </label>
                                 <div class="col-sm-5">
-                                    <input type="text" class="form-control" name="modelo" value="<?php echo $data['equipo_modelo']; ?>" autocomplete="off" required>
+                                    <input type="text" class="form-control" name="modelo" id="modelo" autocomplete="off" required>
                                 </div>
                             </div>
 
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">Descripcion : </label>
                                 <div class="col-sm-5">
-                                    <input type="text" class="form-control" name="descripcion" value="<?php echo $data['equipo_descripcion']; ?>" autocomplete="off"
+                                    <input type="text" class="form-control" name="descripcion" id="descripcion" autocomplete="off"
                                         onkeyPress="return goodchars(event,'0123456789', this)" required>
                                 </div>
                             </div>
