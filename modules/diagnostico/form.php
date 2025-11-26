@@ -2,15 +2,15 @@
 if ($_GET['form'] == 'add') { ?>
     <section class="content-header">
         <h1>
-            <i class="fa fa-edit icon-title">Agregar Diagnstico</i>
+            <i class="fa fa-edit icon-title">Agregar Diagnóstico</i>
         </h1>
         <ol class="breadcrumb">
             <li><a href="?module=start"><i class="fa fa-home"></i>Inicio</a></li>
-            <li><a href="?module=form_diagnostico"> Diagnostico</a></li>
+            <li><a href="?module=diagnostico">Diagnóstico</a></li>
             <li class="active">Agregar</li>
         </ol>
     </section>
-    <!-- ************************************************* insert ************************************************** -->
+
     <section class="content">
         <div class="row">
             <div class="col-md-12">
@@ -18,163 +18,130 @@ if ($_GET['form'] == 'add') { ?>
                     <form role="form" class="form-horizontal" action="modules/diagnostico/proses.php?accion=insertar" method="POST">
                         <div class="box-body">
 
-
+                            <!-- Seleccionar equipo recepcionado -->
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Fecha Diagnostico : </label>
+                                <label class="col-sm-2 control-label">Equipo Recepcionado:</label>
                                 <div class="col-sm-5">
-                                    <input type="date" class="form-control" name="fecha_diagnostico" id="fecha_diagnostico" autocomplete="off" readonly>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Recepcion: </label>
-                                <div class="col-sm-5">
-                                <select class="chosen-select" id="recepcion" name="recepcion" autocomplete="off" onchange="abrirModalSiEsAgregar(this)" required>
-                                </select>
-                                </div>
-                            </div>
-
-                             <!-- buscador cliente -->
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Cliente : </label>
-                                <div class="col-sm-5">
-                                    <input type="text" class="form-control" id="name" name="cliente" autocomplete="off" readonly>
-                                </div>
-                            </div>
-
-                            <!-- buscador marca -->
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Marca : </label>
-                                <div class="col-sm-5">
-                                    <input type="text" class="form-control" id="marca" name="marca" autocomplete="off" readonly>
-                                </div>
-                            </div>
-
-
-                            <!-- buscador tipo equipo -->
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Tipo Equipo : </label>
-                                <div class="col-sm-5">
-                                    <!-- select -->
-                                    <input type="text" class="form-control" id="tipo_equipo" name="tipo_equipo" autocomplete="off" readonly>
-                                </div>
-                            </div>
-
-
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Modelo : </label>
-                                <div class="col-sm-5">
-                                    <input type="text" class="form-control" id="modelo" name="modelo" autocomplete="off" readonly>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Descripcion : </label>
-                                <div class="col-sm-5">
-                                    <textarea type="text" class="form-control" id="descripcion" name="descripcion" autocomplete="off" readonly></textarea>
-                                </div>
-                            </div>
-
-                             <!-- buscador tipo servicio -->
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Tipo Servicio : </label>
-                                <div class="col-sm-5">
-                                    <!-- select -->
-                                    <select class="chosen-select" id="tipo_servicio" name="tipo_servicio" autocomplete="off" onchange="abrirModalSiEsAgregar(this)" required>
+                                    <select class="chosen-select" id="recepcion_equipo" name="id_recepcion_equipo" autocomplete="off" required>
+                                        <option value="" selected disabled>Selecciona un equipo</option>
                                     </select>
                                 </div>
                             </div>
+<!--
+                            // Datos del equipo (solo mostrar)
+                            <div id="datos_equipo" style="margin-left:15%;">
+                                <p><strong>Cliente:</strong> <span id="cliente_text"></span></p>
+                                <p><strong>Marca:</strong> <span id="marca_text"></span></p>
+                                <p><strong>Tipo de Equipo:</strong> <span id="tipo_text"></span></p>
+                                <p><strong>Modelo:</strong> <span id="modelo_text"></span></p>
+                                <p><strong>Descripción:</strong> <span id="descripcion_text"></span></p>
+                                <p><strong>Fecha Recepción:</strong> <span id="fecha_text"></span></p>
+                            </div>
+-->
+                            <!-- Datos del equipo (solo mostrar) -->
+
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Falla : </label>
+                                <label class="col-sm-2 control-label">Cliente:</label>
                                 <div class="col-sm-5">
-                                    <textarea type="text" class="form-control" id="falla_diagnostico" name="falla_diagnostico" placeholder="Ingrese la descripcion del equipo" autocomplete="off"></textarea>
+                                    <input type="text" id="cli_razon_social" name="cli_razon_social" class="form-control" readonly>
                                 </div>
                             </div>
+
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Causa : </label>
+                                <label class="col-sm-2 control-label">Marca:</label>
                                 <div class="col-sm-5">
-                                    <textarea type="text" class="form-control" id="causa_diagnostico" name="causa_diagnostico" placeholder="Ingrese la descripcion del equipo" autocomplete="off"></textarea>
+                                    <input type="text" id="marca_descrip" name="marca_descrip" class="form-control" readonly>
                                 </div>
                             </div>
+
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Solucion : </label>
+                                <label class="col-sm-2 control-label">Tipo de Equipo:</label>
                                 <div class="col-sm-5">
-                                    <textarea type="text" class="form-control" id="solucion_diagnostico"name="solucion_diagnostico" placeholder="Ingrese la descripcion del equipo" autocomplete="off"></textarea>
+                                    <input type="text" id="tipo_descrip" name="tipo_descrip" class="form-control" readonly>
                                 </div>
                             </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Modelo:</label>
+                                <div class="col-sm-5">
+                                    <input type="text" id="equipo_modelo" name="equipo_modelo" class="form-control" readonly>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Descripción:</label>
+                                <div class="col-sm-5">
+                                    <input type="text" id="equipo_descripcion" name="equipo_descripcion" class="form-control" readonly>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Fecha Recepción:</label>
+                                <div class="col-sm-5">
+                                    <input type="text" id="fecha_recepcion" name="fecha_recepcion" class="form-control" readonly>
+                                </div>
+                            </div>
+
+
+
+                            <!-- Campos de diagnóstico -->
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Falla:</label>
+                                <div class="col-sm-5">
+                                    <input type="text" class="form-control" name="falla_diagnostico" placeholder="Ingrese la falla" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Causa:</label>
+                                <div class="col-sm-5">
+                                    <input type="text" class="form-control" name="causa_diagnostico" placeholder="Ingrese la causa" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Solución:</label>
+                                <div class="col-sm-5">
+                                    <input type="text" class="form-control" name="solucion_diagnostico" placeholder="Ingrese la solución" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Observaciones:</label>
+                                <div class="col-sm-5">
+                                    <textarea class="form-control" name="observaciones" placeholder="Observaciones adicionales"></textarea>
+                                </div>
+                            </div>
+
                             <div class="box-footer">
                                 <div class="form-group">
                                     <div class="col-sm-offset-2 col-sm-10">
-                                        <input type="submit" class="btn btn-primary btn-submit" name="Guardar" value="Guardar" onclick="return confirm('Guardar los datos ?')" ;>
-                                        <a href="?module=recepcion_equipo" class="btn btn-default btn-reset">Cancelar</a>
+                                        <input type="submit" class="btn btn-primary btn-submit" value="Guardar" onclick="return confirm('Guardar diagnóstico?')">
+                                        <a href="?module=diagnostico" class="btn btn-default btn-reset">Cancelar</a>
                                     </div>
                                 </div>
                             </div>
+
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-
-
-        <!-- ********************************************** Modal Agregar Cliente *************************************************** -->
-
-       <!-- <div class="modal fade" id="modalAgregarCliente" tabindex="-1" role="dialog" aria-labelledby="modalAgregarClienteLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalAgregarClienteLabel">Agregar Nuevo Cliente</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <form id="formAgregarCliente" method="POST">
-                        <div class="modal-body">
-                            <div class="form-group">
-
-                                <label for="razon_social">Razón Social</label>
-                                <input type="text" class="form-control" id="razon_social" name="razon_social" placeholder="Ingrese la razón social" required>
-                                <label for="ruc_ci">RUC / C.I</label>
-                                <input type="text" class="form-control" id="ruc_ci" name="ruc_ci" placeholder="Ingrese el RUC o C.I del cliente" required>
-                                <label for="ciudad">Ciudad</label>
-                                <select class="chosen-select" name="ciudad" id="ciudad" data-placeholder="Seleccionar Ciudad" autocomplete="off" required>
-                                   //Las opciones de ciudad se cargarán aquí mediante AJAX
-                                </select>
-                                <label for="direccion">Dirección</label>
-                                <input type="text" class="form-control" id="direccion" name="direccion" placeholder="Ingrese la dirección" required>
-                                <label for="email">Email</label>
-                                <input type="email" class="form-control" id="email" name="email" placeholder="Ingrese el email" required>
-                                <label for="telefono">Teléfono</label>
-                                <input type="text" class="form-control" id="telefono" name="telefono" placeholder="Ingrese el teléfono" required>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Guardar Cliente</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>-->
-
     </section>
-    <!-- ********************************************** update *************************************************** -->
+
 <?php } elseif ($_GET['form'] == 'edit') {
     if (isset($_GET['id'])) {
-        $query = mysqli_query($mysqli, "SELECT * FROM recepcion_equipo AS re
-                            LEFT JOIN tipo_equipo AS e ON re.id_tipo_equipo = e.id_tipo_equipo
-                            LEFT JOIN marcas AS m ON re.id_marca = m.id_marca
-                            LEFT JOIN tipo_equipo AS te ON re.id_tipo_equipo = te.id_tipo_equipo
-                            LEFT JOIN clientes AS cl ON re.id_cliente = cl.id_cliente WHERE re.id_recepcion_equipo = '$_GET[id]';")
-            or die('Error' . mysqli_error($mysqli));
+        include "../../config/database.php";
+        $query = mysqli_query($mysqli, "SELECT * FROM diagnostico WHERE id_diagnostico='$_GET[id]'") or die(mysqli_error($mysqli));
         $data = mysqli_fetch_assoc($query);
-    } ?>
+    ?>
     <section class="content-header">
         <h1>
-            <i class="fa fa-edit icon-title">Modificar Recepcion Equipo</i>
+            <i class="fa fa-edit icon-title">Modificar Diagnóstico</i>
         </h1>
         <ol class="breadcrumb">
             <li><a href="?module=start"><i class="fa fa-home"></i>Inicio</a></li>
-            <li><a href="?module=recepcion_equipo"> Recepcion Equipo</a></li>
+            <li><a href="?module=diagnostico">Diagnóstico</a></li>
             <li class="active">Modificar</li>
         </ol>
     </section>
@@ -182,335 +149,87 @@ if ($_GET['form'] == 'add') { ?>
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-primary">
-                    <form role="form" class="form-horizontal" action="modules/recepcion_equipo/proses.php?accion=actualizar" method="POST">
+                    <form role="form" class="form-horizontal" action="modules/diagnostico/proses.php?accion=actualizar" method="POST">
                         <div class="box-body">
-
-                            <!-- Combo buscador -->
+                            <input type="hidden" name="id_diagnostico" value="<?php echo $data['id_diagnostico']; ?>">
 
                             <div class="form-group">
+                                <label class="col-sm-2 control-label">Falla:</label>
                                 <div class="col-sm-5">
-                                    <input type="hidden" class="form-control" name="id_recepcion_equipo" value="<?php echo $data['id_recepcion_equipo']; ?>" autocomplete="off" required>
+                                    <input type="text" class="form-control" name="falla_diagnostico" value="<?php echo $data['falla_diagnostico']; ?>" required>
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Cliente : </label>
+                                <label class="col-sm-2 control-label">Causa:</label>
                                 <div class="col-sm-5">
-                                    <select class="chosen-select" id="cliente" name="cliente" autocomplete="off" required>
-
-                                    </select>
+                                    <input type="text" class="form-control" name="causa_diagnostico" value="<?php echo $data['causa_diagnostico']; ?>" required>
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Marca: </label>
+                                <label class="col-sm-2 control-label">Solución:</label>
                                 <div class="col-sm-5">
-                                    <select class="chosen-select" id="marca" name="marca" autocomplete="off" required>
-
-                                    </select>
+                                    <input type="text" class="form-control" name="solucion_diagnostico" value="<?php echo $data['solucion_diagnostico']; ?>" required>
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Tipo Equipo : </label>
+                                <label class="col-sm-2 control-label">Observaciones:</label>
                                 <div class="col-sm-5">
-                                    <select class="form-control" id="tipo_equipo" name="tipo_equipo" autocomplete="off" required>
-
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Modelo : </label>
-                                <div class="col-sm-5">
-                                    <input type="text" class="form-control" name="modelo" id="modelo" autocomplete="off" required>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">Descripcion : </label>
-                                <div class="col-sm-5">
-                                    <input type="text" class="form-control" name="descripcion" id="descripcion" autocomplete="off"
-                                        onkeyPress="return goodchars(event,'0123456789', this)" required>
+                                    <textarea class="form-control" name="observaciones"><?php echo $data['observaciones']; ?></textarea>
                                 </div>
                             </div>
 
                             <div class="box-footer">
                                 <div class="form-group">
                                     <div class="col-sm-offset-2 col-sm-10">
-                                        <input type="submit" class="btn btn-primary btn-submit" name="Guardar" value="Guardar" onclick="return confirm('Desea modificar los datos ?')" ;>
-                                        <a href="?module=recepcion_equipo" class="btn btn-default btn-reset">Cancelar</a>
+                                        <input type="submit" class="btn btn-primary btn-submit" value="Guardar Cambios" onclick="return confirm('Actualizar diagnóstico?')">
+                                        <a href="?module=diagnostico" class="btn btn-default btn-reset">Cancelar</a>
                                     </div>
                                 </div>
                             </div>
+
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </section>
-
-
-<?php } ?>
-
+<?php }
+} ?>
 
 <script>
-
-
-    var direccionCliente = window.location.protocol + "//" + window.location.hostname + "/TecSystem-master/modules/recepcion_equipo/proses.php?accion=consultarCliente";
-    var direccionMarca = window.location.protocol + "//" + window.location.hostname + "/TecSystem-master/modules/recepcion_equipo/proses.php?accion=consultarMarca";
-    var direccionTipoEquipo = window.location.protocol + "//" + window.location.hostname + "/TecSystem-master/modules/recepcion_equipo/proses.php?accion=consultarTipo_Equipo";
-    var direccionCiudad = window.location.protocol + "//" + window.location.hostname + "/TecSystem-master/modules/recepcion_equipo/proses.php?accion=consultarCiudad";
-
-
-
+    // URL para obtener las recepciones
+    var urlRecepcion = window.location.protocol + "//" + window.location.hostname + "/TecSystem-master/modules/diagnostico/proses.php?accion=consultarRecepcion";
 
     $(document).ready(function() {
-        // Llamar a la función pasando la URL y el ID del select con el placeholder específico
-        cargarOpcionesSelect(direccionCliente, 'cliente', 'Selecciona el Cliente'); // Cargar clientes
-        cargarOpcionesSelect(direccionMarca, 'marca', 'Selecciona la Marca'); // Cargar marcas
-        cargarOpcionesSelect(direccionTipoEquipo, 'tipo_equipo', 'Selecciona el Tipo de Equipo');//Cargar Tipo Equipo
-        cargarOpcionesSelect(direccionCiudad, 'ciudad', 'Selecciona la ciudad'); // Cargar ciudad Modal Cliente
-    });
-
-    //Funcion para devolver la consulta a los select 
-    function cargarOpcionesSelect(url, selectId, placeholder) {
-        $.ajax({
-            url: url,
-            type: 'GET',
-            dataType: 'json',
-            success: function(response) {
-                console.log(response); // Depurar la respuesta
-
-                const select = $(`#${selectId}`);
-
-                // Limpiar las opciones existentes sin eliminar el placeholder si ya está
-                select.empty();
-
-                // Añadir el placeholder primero
-                select.append(`<option value="" selected disabled>${placeholder}</option>`);
-
-                if (Array.isArray(response)) {
-                    // Añadir las opciones dinámicas
-                    response.forEach(item => {
-                        if (selectId === 'cliente') {
-                            select.append(new Option(item.cli_razon_social, item.id_cliente)); // Para cliente
-                        } else if (selectId === 'marca') {
-                            select.append(new Option(item.marca_descrip, item.id_marca)); // Para marca
-                        } else if (selectId === 'tipo_equipo') {
-                            select.append(new Option(item.tipo_descrip, item.id_tipo_equipo)); // Para tipo equipo
-                        } else if (selectId === 'ciudad') {
-                            select.append(new Option(item.descrip_ciudad, item.cod_ciudad)); //Para ciudad de modal cliente
-                        }
-                    });
-
-                    // Añadir la opción "Agregar nuevo 
-                    if (selectId === 'cliente') {
-                        select.append(new Option("Agregar nuevo cliente", "nueva"));
-                    } else if (selectId === 'marca') {
-                        select.append(new Option("Agregar nueva marca", "nueva"));
-                    } else if (selectId === 'tipo_equipo') {
-                        select.append(new Option("Agregar nuevo Tipo de Equipo", "nueva"));
-                    }
-                    // Actualizar Chosen después de agregar las opciones
-                    select.trigger("chosen:updated"); 
-
-                } else {
-                    console.error("La respuesta no es un array válido");
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error("Error al cargar las opciones:", error);
-            }
-        });
-    }
-
-     // Función para abrir el modal si se selecciona el select "Agregar nueva ...."
-
-     function abrirModalSiEsAgregar(selectElement) {
-        // Verificar si se seleccionó la opción de agregar nuevo (opción 'nueva')
-        if (selectElement.value === "nueva") {
-            // Verificar el ID del select para determinar qué modal abrir
-            if (selectElement.id === "marca") {
-                $('#modalAgregarMarca').modal('show'); // Abre el modal para agregar nueva marca
-            } else if (selectElement.id === "cliente") {
-                $('#modalAgregarCliente').modal('show'); // Abre el modal para agregar nuevo cliente
-            } else if (selectElement.id === "tipo_equipo"){
-                $('#modalAgregarTipoEquipo').modal('show'); // Abre el modal para agregar nuevo tipo equipo
-            }
-            selectElement.value = ""; // Restaura el select a su estado inicial
-        }
-    }
-
-
-//Funcion para asignar la fecha (dd/mm/aaaa) automaticamente 
-    $(document).ready(function() {
-        function agregarFechaActual() {
-            // Obtener la fecha actual
-            const fechaActual = new Date();
-
-            // Formatear la fecha a "YYYY-MM-DD"
-            const year = fechaActual.getFullYear();
-            const month = String(fechaActual.getMonth() + 1).padStart(2, '0');
-            const day = String(fechaActual.getDate()).padStart(2, '0');
-
-            const fechaFormateada = `${year}-${month}-${day}`;
-
-            // Asignar la fecha al input
-            $('#fecha_recepcion').val(fechaFormateada);
-        }
-
-        // Llamar a la función para agregar la fecha al cargar la página
-        agregarFechaActual();
-    });
-
-
-
-   
-
-
-    $(document).ready(function() {
-
-        // Enviar el formulario del modal al hacer clic en "Guardar Marca"
-        $('#formAgregarMarca').submit(function(e) {
-            e.preventDefault(); // Evitar el envío normal del formulario
-            const nuevaMarca = $('#nuevaMarca').val();
-            const submitButton = $(this).find('button[type="submit"]');
-            submitButton.prop('disabled', true);
-
-            $.ajax({
-                url: "modules/recepcion_equipo/proses.php?accion=guardarMarca", // Ruta a tu archivo de procesamiento
-                type: "POST",
-                data: {
-                    nuevaMarca: nuevaMarca
-                },
-                dataType: "json",
-                success: function(response) {
-                    if (response.success) {
-                        // Agregar la nueva opción al select
-                        $('#marca option[value="nueva"]').remove(); // Quitar temporalmente la opción "Agregar nueva marca"
-                        $('#marca').append(new Option(response.marca_descrip, response.id_marca)); // Añadir la nueva marca
-                        $('#marca').append(new Option("Agregar nueva marca", "nueva")); // Reagregar "Agregar nueva marca" al final
-
-
-
-                        // Actualizar y refrescar el select si estás usando un plugin como Chosen o Select2
-                        $('#marca').trigger('chosen:updated');
-
-
-                        // Limpiar y cerrar el modal
-                        $('#formAgregarMarca')[0].reset();
-                        $('#modalAgregarMarca').modal('hide');
-                    } else {
-                        alert("Error: " + response.message);
-                    }
-                },
-                error: function() {
-                    alert("Error al guardar la nueva marca");
-                }
+        // Cargar select de recepciones
+        $.getJSON(urlRecepcion, function(response) {
+            var select = $('#recepcion_equipo');
+            select.empty();
+            select.append('<option value="" selected disabled>Selecciona un equipo</option>');
+            $.each(response, function(i, item) {
+                select.append('<option value="'+item.id_recepcion_equipo+'">'+item.equipo_modelo+' - '+item.cli_razon_social+'</option>');
             });
+            select.trigger('chosen:updated');
         });
-    });
 
-    $(document).ready(function() {
-
-// Enviar el formulario del modal al hacer clic en "Guardar Tipo Equipo"
-$('#formAgregarTipoEquipo').submit(function(e) {
-    e.preventDefault(); // Evitar el envío normal del formulario
-    const nuevoTipoEquipo= $('#nuevoTipoEquipo').val();
-    const submitButton = $(this).find('button[type="submit"]');
-    submitButton.prop('disabled', true);
-
-    $.ajax({
-        url: "modules/recepcion_equipo/proses.php?accion=guardarTipoEquipo", // Ruta a tu archivo de procesamiento
-        type: "POST",
-        data: {
-            nuevoTipoEquipo: nuevoTipoEquipo
-        },
-        dataType: "json",
-        success: function(response) {
-            if (response.success) {
-                // Agregar la nueva opción al select
-                $('#tipo_equipo option[value="nueva"]').remove(); // Quitar temporalmente la opción "Agregar nueva marca"
-                $('#tipo_equipo').append(new Option(response.tipo_descrip, response.id_tipo_equipo)); // Añadir la nueva marca
-                $('#tipo_equipo').append(new Option("Agregar nuevo Tipo de Equipo", "nueva")); // Reagregar "Agregar nueva marca" al final
-
-
-
-                // Actualizar y refrescar el select si estás usando un plugin como Chosen o Select2
-                $('#tipo_equipo').trigger('chosen:updated');
-
-
-                // Limpiar y cerrar el modal
-                $('#formAgregarTipoEquipo')[0].reset();
-                $('#modalAgregarTipoEquipo').modal('hide');
-            } else {
-                alert("Error: " + response.message);
+        // Cuando se selecciona un equipo, traer datos del cliente y equipo
+        $('#recepcion_equipo').change(function() {
+            var id = $(this).val();
+            if(id){
+                $.getJSON('modules/diagnostico/proses.php?accion=datosRecepcion&id='+id, function(data){
+                    // Llenar los inputs readonly usando .val()
+                    $('#cli_razon_social').val(data.cli_razon_social);
+                    $('#marca_descrip').val(data.marca_descrip);
+                    $('#tipo_descrip').val(data.tipo_descrip);
+                    $('#equipo_modelo').val(data.equipo_modelo);
+                    $('#equipo_descripcion').val(data.equipo_descripcion);
+                    $('#fecha_recepcion').val(data.fecha_recepcion);
+                });
             }
-        },
-        error: function() {
-            alert("Error al guardar el nuevo tipo de equipo");
-        }
-    });
-});
-});
-
-
-    $(document).ready(function() {
-
-        $('#formAgregarCliente').submit(function(e) {
-            e.preventDefault();
-            const razon_social = $('#razon_social').val();
-            const ruc_ci = $('#ruc_ci').val();
-            const ciudad = $('#ciudad').val();
-            const direccion = $('#direccion').val();
-            const email = $('#email').val();
-            const telefono = $('#telefono').val();
-
-            const submitButton = $(this).find('button[type="submit"]');
-            submitButton.prop('disabled', true); // Deshabilitar el botón de enviar para evitar múltiples envíos
-
-            // Realizar la solicitud AJAX
-            $.ajax({
-                url: "modules/recepcion_equipo/proses.php?accion=guardarCliente", // Asegúrate de que esta ruta sea correcta
-                type: "POST",
-                data: {
-                    razon_social: razon_social,
-                    ruc_ci: ruc_ci,
-                    ciudad: ciudad,
-                    direccion: direccion,
-                    email: email,
-                    telefono: telefono
-                },
-                dataType: "json",
-                success: function(response) {
-                    if (response.success) {
-                        // Agregar el nuevo cliente al select de clientes si es necesario
-                        $('#cliente option[value="nueva"]').remove(); // Quitar temporalmente la opción Agregar nuevo cliente
-                        $('#cliente').append(new Option(response.razon_social, response.id_cliente));
-                        $('#cliente').append(new Option("Agregar nuevo cliente", "nueva")); // Reagregar "Agregar nueva cliente al final
-
-
-                        // Actualizar y refrescar el select si estás usando un plugin como Chosen o Select2
-                        $('#cliente').trigger('chosen:updated');
-
-                        // Limpiar y cerrar el modal
-                        $('#formAgregarCliente')[0].reset();
-                        $('#modalAgregarCliente').modal('hide');
-                    } else {
-                        alert("Error: " + response.message);
-                    }
-                },
-                error: function() {
-                    alert("Error al guardar el nuevo cliente");
-                },
-                complete: function() {
-                    submitButton.prop('disabled', false); // Habilitar el botón de submit de nuevo
-                }
-            });
-
         });
     });
-
-    
 </script>
+

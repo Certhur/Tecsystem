@@ -1,232 +1,167 @@
-
 <?php
 header('Content-Type: application/json');
 session_start();
 require_once "../../config/database.php";
 
-
 if (empty($_SESSION['username']) && empty($_SESSION['password'])) {
     echo "<meta http-equiv='refresh' content='0; url=index.php?alert=3'>";
 } else {
 
-    $accion = !empty($_REQUEST['accion']) && isset($_REQUEST['accion']) ? $_REQUEST['accion'] : null;
+    $accion = !empty($_REQUEST['accion']) ? $_REQUEST['accion'] : null;
 
     switch ($accion) {
 
-            //CONSULTA DE DATOS DE LOS SELECT
-
-        case 'consultarCliente':
-            $query = mysqli_query($mysqli, "SELECT id_cliente, cli_razon_social FROM clientes");
-
-            if ($query) {
-                $clientes = [];
-                while ($row = mysqli_fetch_assoc($query)) {
-                    $clientes[] = $row;
-                }
-                echo json_encode($clientes);
-            } else {
-                echo json_encode(['error' => 'Error en la consulta']);
+        // CONSULTAS PARA SELECT Y DATOS DE RECEPCION
+        case 'consultarRecepcion':
+            $query = mysqli_query($mysqli, "SELECT re.id_recepcion_equipo, re.equipo_modelo, cl.cli_razon_social 
+                                            FROM recepcion_equipo AS re 
+                                            LEFT JOIN clientes AS cl ON re.id_cliente = cl.id_cliente");
+            $recepciones = [];
+            while ($row = mysqli_fetch_assoc($query)) {
+                $recepciones[] = $row;
             }
-
+            echo json_encode($recepciones);
             break;
+        case 'cambiar_estado':
+            if(isset($_POST['id_diagnostico']) && isset($_POST['estado_diagnostico'])){
+                $id = mysqli_real_escape_string($mysqli, $_POST['id_diagnostico']);
+                $estado = mysqli_real_escape_string($mysqli, $_POST['estado_diagnostico']);
 
-        case 'consultarMarca':
-            $query = mysqli_query($mysqli, "SELECT id_marca, marca_descrip FROM marcas");
-
-            if ($query) {
-                $marcas = [];
-                while ($row = mysqli_fetch_assoc($query)) {
-                    $marcas[] = $row;
-                }
-                echo json_encode($marcas);
-            } else {
-                echo json_encode(['error' => 'Error en la consulta de marcas']);
-            }
-            break;
-
-        case 'consultarTipo_Equipo':
-            $query = mysqli_query($mysqli, "SELECT id_tipo_equipo, tipo_descrip FROM tipo_equipo");
-
-            if ($query) {
-                $tipo_equipo = [];
-                while ($row = mysqli_fetch_assoc($query)) {
-                    $tipo_equipo[] = $row;
-                }
-                echo json_encode($tipo_equipo);
-            } else {
-                echo json_encode(['error' => 'Error en la consulta de marcas']);
-            }
-            break;
-
-        case 'consultarCiudad':
-            $query = mysqli_query($mysqli, "SELECT cod_ciudad, descrip_ciudad FROM ciudad");
-
-            if ($query) {
-                $ciudad = [];
-                while ($row = mysqli_fetch_assoc($query)) {
-                    $ciudad[] = $row;
-                }
-                echo json_encode($ciudad);
-            } else {
-                echo json_encode(['error' => 'Error en la consulta']);
-            }
-
-            break;
-
-            //FIN DE CONSULTA DE DATOS DE LOS SELECT
-
-            //REGISTRAR DATOS DEL MODAL
-
-        case 'guardarMarca':
-
-            $nuevaMarca = $_POST['nuevaMarca'];
-
-            // Validar que no esté vacía
-            if (!empty($nuevaMarca)) {
-                // Insertar la nueva marca en la tabla 'marcas'
-                $query = "INSERT INTO marcas(marca_descrip) VALUES ('$nuevaMarca')";
-                $result = mysqli_query($mysqli, $query);
-
-                if ($result) {
-                    // Si la inserción fue exitosa, devolver el ID de la nueva marca
-                    $lastId = mysqli_insert_id($mysqli);
-                    echo json_encode(['success' => true, 'id_marca' => $lastId, 'marca_descrip' => $nuevaMarca]);
+                $query = mysqli_query($mysqli, "UPDATE diagnostico SET estado_diagnostico='$estado' WHERE id_diagnostico='$id'");
+                if($query){
+                    echo json_encode(['status' => 'ok']); // <- ahora devuelve JSON
                 } else {
-                    echo json_encode(['success' => false, 'message' => 'Error al guardar la marca']);
+                    echo json_encode(['status' => 'error']);
                 }
             } else {
-                echo json_encode(['success' => false, 'message' => 'Nombre de marca vacío']);
+                echo json_encode(['status' => 'error']);
             }
-
-            break;
-
-        case 'guardarTipoEquipo':
-
-            $nuevoTipoEquipo = $_POST['nuevoTipoEquipo'];
-
-            if (!empty($nuevoTipoEquipo)) {
-
-                $query = "INSERT INTO tipo_equipo(tipo_descrip) VALUES ('$nuevoTipoEquipo')";
-                $result = mysqli_query($mysqli, $query);
-
-                if ($result) {
-                    $lastId = mysqli_insert_id($mysqli);
-                    echo json_encode(['success' => true, 'id_tipo_equipo' => $lastId, 'tipo_descrip' => $nuevoTipoEquipo]);
-                } else {
-                    echo json_encode(['success' => false, 'message' => 'Error al guardar el tipo equipo']);
-                }
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Nombre de tipo equipo vacío']);
-            }
-
-            break;
-
-        case 'guardarCliente':
-
-            // Obtener los datos enviados por AJAX
-            $razon_social = $_POST['razon_social'];
-            $ruc_ci = $_POST['ruc_ci'];
-            $ciudad = $_POST['ciudad'];
-            $direccion = $_POST['direccion'];
-            $email = $_POST['email'];
-            $telefono = $_POST['telefono'];
-
-            // Validar que los campos no estén vacíos
-            if (!empty($razon_social) && !empty($ruc_ci) && !empty($ciudad) && !empty($direccion) && !empty($email) && !empty($telefono)) {
-                // Insertar el nuevo cliente en la tabla 'clientes'
-                $query = "INSERT INTO clientes(cod_ciudad, ci_ruc, cli_razon_social, cli_direccion, cli_telefono, cli_email) 
-                  VALUES ($ciudad, '$ruc_ci', '$razon_social', '$direccion', $telefono, '$email')";
-                $result = mysqli_query($mysqli, $query);
-
-                if ($result) {
-                    // Si la inserción fue exitosa, devolver el ID del nuevo cliente
-                    $lastId = mysqli_insert_id($mysqli);
-                    echo json_encode(['success' => true, 'id_cliente' => $lastId, 'razon_social' => $razon_social]);
-                } else {
-                    echo json_encode(['success' => false, 'message' => 'Error al guardar el cliente']);
-                }
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Campos vacíos']);
-            }
-
-            break;
+            exit(); // detener ejecución aquí
+        break;
 
 
+        case 'archivar':
+                $id = $_POST['id_diagnostico'];
 
-            //FIN DEL REGISTRO DE DATOS MODAL
+                $query = mysqli_query($mysqli,
+                    "UPDATE diagnostico SET estado_diagnostico = 'Archivado'
+                    WHERE id_diagnostico = '$id'"
+                );
 
-            //INSERT UPDATE DELETE
-
-        case 'insertar':
-            $id_cliente = $_POST['cliente'];
-            $id_marca = $_POST['marca'];
-            $id_tipo_equipo = $_POST['tipo_equipo'];
-            $equipo_modelo = mysqli_real_escape_string($mysqli, $_POST['modelo']);
-            $equipo_descripcion = mysqli_real_escape_string($mysqli, $_POST['descripcion']);
-            $recepcion_estado = 1;
-
-            // Validación básica de campos requeridos
-            if (empty($id_cliente) || empty($id_marca) || empty($id_tipo_equipo) || empty($equipo_modelo) || empty($equipo_descripcion)) {
-                echo json_encode(['status' => 'error', 'mensaje' => 'Faltan campos requeridos']);
+                echo json_encode(["status" => $query ? "ok" : "error"]);
                 exit();
+        break;
+
+        case 'obtener_archivados':
+            header('Content-Type: application/json');
+
+            $sql = mysqli_query($mysqli,
+                "SELECT dg.*, re.equipo_modelo, cl.cli_razon_social, m.marca_descrip, te.tipo_descrip
+                FROM diagnostico dg
+                LEFT JOIN recepcion_equipo re ON dg.id_recepcion_equipo = re.id_recepcion_equipo
+                LEFT JOIN clientes cl ON re.id_cliente = cl.id_cliente
+                LEFT JOIN marcas m ON re.id_marca = m.id_marca
+                LEFT JOIN tipo_equipo te ON re.id_tipo_equipo = te.id_tipo_equipo
+                WHERE dg.estado_diagnostico = 'Archivado'"
+            );
+
+            $rows = [];
+            while($r = mysqli_fetch_assoc($sql)){
+                $rows[] = $r;
             }
 
-            $query = mysqli_query($mysqli, "INSERT INTO recepcion_equipo(id_tipo_equipo, id_marca, equipo_modelo, equipo_descripcion, fecha_recepcion, recepcion_estado, id_cliente) 
-                        VALUES ('$id_tipo_equipo', '$id_marca','$equipo_modelo', '$equipo_descripcion', NOW(), $recepcion_estado, '$id_cliente')");
+            echo json_encode($rows);
+            exit();
+        break;
+        
+        case 'desarchivar':
+            header('Content-Type: application/json');
 
-            if ($query) {
-                header("Location: ../../main.php?module=recepcion_equipo&alert=1");
-            } else {
-                header(header: "Location: ../../main.php?module=recepcion_equipo&alert=4");
-            }
+            $id = intval($_POST['id_diagnostico']);
+            $q = mysqli_query($mysqli,
+                "UPDATE diagnostico SET estado_diagnostico='Pendiente'
+                WHERE id_diagnostico=$id"
+            );
+
+            echo json_encode(["status" => $q ? "ok" : "error"]);
+            exit();
+        break;
+
+
+
+
+
+
+        case 'datosRecepcion':
+            $id = intval($_GET['id']);
+            $query = mysqli_query($mysqli, "SELECT re.*, cl.cli_razon_social, m.marca_descrip, te.tipo_descrip 
+                                           FROM recepcion_equipo AS re
+                                           LEFT JOIN clientes AS cl ON re.id_cliente = cl.id_cliente
+                                           LEFT JOIN marcas AS m ON re.id_marca = m.id_marca
+                                           LEFT JOIN tipo_equipo AS te ON re.id_tipo_equipo = te.id_tipo_equipo
+                                           WHERE re.id_recepcion_equipo = $id");
+            echo json_encode(mysqli_fetch_assoc($query));
             break;
 
+        // INSERTAR DIAGNOSTICO
+    case 'insertar':
+        $id_recepcion_equipo = $_POST['id_recepcion_equipo'];
+        $falla_diagnostico = mysqli_real_escape_string($mysqli, $_POST['falla_diagnostico']);
+        $causa_diagnostico = mysqli_real_escape_string($mysqli, $_POST['causa_diagnostico']);
+        $solucion_diagnostico = mysqli_real_escape_string($mysqli, $_POST['solucion_diagnostico']);
+        $observaciones = mysqli_real_escape_string($mysqli, $_POST['observaciones']);
+
+        // ✅ Asignamos por defecto "Pendiente"
+        $estado_diagnostico = 'Pendiente';
+
+        if (empty($id_recepcion_equipo) || empty($falla_diagnostico) || empty($causa_diagnostico) || empty($solucion_diagnostico)) {
+            echo json_encode(['status' => 'error', 'mensaje' => 'Faltan campos requeridos']);
+            exit();
+        }
+
+        $query = mysqli_query($mysqli, "INSERT INTO diagnostico 
+            (id_recepcion_equipo, falla_diagnostico, causa_diagnostico, solucion_diagnostico, observaciones, estado_diagnostico, fecha_diagnostico)
+            VALUES
+            ('$id_recepcion_equipo', '$falla_diagnostico', '$causa_diagnostico', '$solucion_diagnostico', '$observaciones', '$estado_diagnostico', NOW())");
+
+        if ($query) {
+            header("Location: ../../main.php?module=diagnostico&alert=1");
+        } else {
+            header("Location: ../../main.php?module=diagnostico&alert=4");
+        }
+        break;
+
+        // ACTUALIZAR DIAGNOSTICO
         case 'actualizar':
+            $id_diagnostico = $_POST['id_diagnostico'];
+            $falla_diagnostico = mysqli_real_escape_string($mysqli, $_POST['falla_diagnostico']);
+            $causa_diagnostico = mysqli_real_escape_string($mysqli, $_POST['causa_diagnostico']);
+            $solucion_diagnostico = mysqli_real_escape_string($mysqli, $_POST['solucion_diagnostico']);
+            $observaciones = mysqli_real_escape_string($mysqli, $_POST['observaciones']);
 
-            $id_cliente = $_POST['cliente'];
-            $id_marca = $_POST['marca'];
-            $id_tipo_equipo = $_POST['tipo_equipo'];
-            $equipo_modelo = mysqli_real_escape_string($mysqli, $_POST['modelo']);
-            $equipo_descripcion = mysqli_real_escape_string($mysqli, $_POST['descripcion']);
+            $query = mysqli_query($mysqli, "UPDATE diagnostico SET 
+                                            falla_diagnostico = '$falla_diagnostico',
+                                            causa_diagnostico = '$causa_diagnostico',
+                                            solucion_diagnostico = '$solucion_diagnostico',
+                                            observaciones = '$observaciones'
+                                            WHERE id_diagnostico = '$id_diagnostico'");
 
-            // Validación básica de campos requeridos
-            if (empty($id_recepcion_equipo) || empty($id_cliente) || empty($id_marca) || empty($id_tipo_equipo) || empty($equipo_modelo) || empty($equipo_descripcion)) {
-                echo json_encode(['status' => 'error', 'mensaje' => 'Faltan campos requeridos']);
-                exit();
-            }
-
-            // Preparar la consulta de actualización
-            $query = mysqli_query($mysqli, "UPDATE recepcion_equipo SET 
-                                            id_cliente = '$id_cliente', 
-                                            id_marca = '$id_marca',
-                                            id_tipo_equipo = '$id_tipo_equipo',
-                                            equipo_modelo = '$equipo_modelo', 
-                                            equipo_descripcion = '$equipo_descripcion'
-                                        WHERE id_recepcion_equipo = '$id_recepcion_equipo'");
-
-            // Comprobar si la actualización fue exitosa
             if ($query) {
-                echo json_encode(['status' => 'success', 'mensaje' => 'Registro actualizado correctamente']);
+                header("Location: ../../main.php?module=diagnostico&alert=2");
             } else {
-                echo json_encode(['status' => 'error', 'mensaje' => 'Error al actualizar el registro']);
+                header("Location: ../../main.php?module=diagnostico&alert=4");
             }
             break;
 
+        // ELIMINAR DIAGNOSTICO
         case 'eliminar':
-
-            $id_recepcion_equipo = $_GET['id_recepcion_equipo'];
-
-            if (empty($id_recepcion_equipo)) {
-                echo json_encode(['error' => 'ID no proporcionado']);
-                exit();
-            }
-            $query = mysqli_query($mysqli, "DELETE FROM recepcion_equipo WHERE id_recepcion_equipo = $id_recepcion_equipo;");
+            $id_diagnostico = intval($_GET['id_diagnostico']);
+            $query = mysqli_query($mysqli, "DELETE FROM diagnostico WHERE id_diagnostico = $id_diagnostico");
             if ($query) {
-                echo json_encode(['mensaje' => 'Registro eliminado correctamente']);
+                echo json_encode(['mensaje' => 'Diagnóstico eliminado correctamente']);
             } else {
-                echo json_encode(['error' => 'Error al eliminar registro']);
+                echo json_encode(['error' => 'Error al eliminar diagnóstico']);
             }
-
             break;
 
         default:
@@ -234,7 +169,4 @@ if (empty($_SESSION['username']) && empty($_SESSION['password'])) {
             break;
     }
 }
-
-
-
 ?>

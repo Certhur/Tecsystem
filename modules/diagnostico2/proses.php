@@ -229,19 +229,6 @@ if (empty($_SESSION['username']) && empty($_SESSION['password'])) {
 
             break;
 
-            case 'archivar':
-                $id = $_POST['id_diagnostico'];
-
-                $query = mysqli_query($mysqli,
-                    "UPDATE diagnostico SET estado_diagnostico = 'Archivado'
-                    WHERE id_diagnostico = '$id'"
-                );
-
-                echo json_encode(["status" => $query ? "ok" : "error"]);
-                exit();
-            break;
-
-
         default:
             echo json_encode(['error' => 'Acción no válida']);
             break;
