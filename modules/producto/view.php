@@ -1,131 +1,142 @@
+<?php
+// Vista de productos
+?>
+
 <section class="content-header">
-<ol class="breadcrumb">
-    <li><a href="?module=start"><i class="fa fa-home"></i>Inicio</a></li>
-    <li class="active"><a href="?module=producto">Producto</a></li>
-</ol><br><hr>
-<h1>
-    <i class="fa fa-folder icon-title"></i>Registros de Producto
-    <a class="btn btn-primary btn-social pull-right" href="?module=form_producto&form=add" title="Agregar" data-toggle="tooltip">
+    <ol class="breadcrumb">
+        <li><a href="?module=start"><i class="fa fa-home"></i>Inicio</a></li>
+        <li class="active"><a href="?module=producto">Productos</a></li>
+    </ol><br>
+    <hr>
+
+    <h1>
+        <i class="fa fa-folder icon-title"></i> Gestión de Productos
+        <a class="btn btn-primary btn-social pull-right"
+           href="?module=form_producto&form=add"
+           title="Agregar" data-toggle="tooltip">
             <i class="fa fa-plus"></i>Agregar
-    </a>
-</h1>
-</section">
+        </a>
+    </h1>
+</section>
+
 <section class="content">
     <div class="row">
         <div class="col-md-12">
-            <?php 
-            if(empty($_GET["alert"])){
-                echo "";
-            }
-            elseif($_GET["alert"]==1){
-                echo "<div class='alert alert-success alert-dismissable'>
-                <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>
-                <h4>  <i class='icon fa fa-check-circle'></i> Exito !</h4>
-                Datos registrados correctamente
-                </div>";
-            }
-            elseif($_GET["alert"]==2){
-                echo "<div class='alert alert-success alert-dismissable'>
-                <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>
-                <h4>  <i class='icon fa fa-check-circle'></i> Exito !</h4>
-                Datos Modificados correctamente
-                </div>";
-            }
-            elseif($_GET["alert"]==3){
-                echo "<div class='alert alert-success alert-dismissable'>
-                <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>
-                <h4>  <i class='icon fa fa-check-circle'></i> Exito !</h4>
-                Datos Eliminados correctamente
-                </div>";
-            }
-            elseif($_GET["alert"]==4){
-                echo "<div class='alert alert-danger alert-dismissable'>
-                <button type='button' class='close' data-dismiss='alert' aria-hidden='true'>&times;</button>
-                <h4>  <i class='icon fa fa-check-circle'></i> Error !</h4>
-                No se pudo realizar la operación
+
+            <?php
+            // ALERTAS
+            if (!empty($_GET['alert'])) {
+                $mensajes = [
+                    1 => ["success", "Datos registrados correctamente"],
+                    2 => ["success", "Datos modificados correctamente"],
+                    3 => ["success", "Datos eliminados correctamente"],
+                    4 => ["danger", "No se pudo realizar la operación"]
+                ];
+
+                $tipo = $mensajes[$_GET['alert']][0];
+                $mensaje = $mensajes[$_GET['alert']][1];
+
+                echo "
+                <div class='alert alert-$tipo alert-dismissable'>
+                    <button type='button' class='close' data-dismiss='alert'>&times;</button>
+                    <h4><i class='icon fa fa-check-circle'></i> Resultado</h4>
+                    $mensaje
                 </div>";
             }
             ?>
+
             <div class="box box-primary">
                 <div class="box-body">
 
-                <section class="content-header">
-                    <a class="btn btn-warning btn-social pull-right" href="modules/producto/print.php" target="_blank">
-                        <i class="fa fa-print"></i>IMPRIMIR PRODUCTO
-                    </a>
-                </section>
+                    <!-- Botón imprimir -->
+                    <section class="content-header">
+                        <a class="btn btn-warning btn-social pull-right"
+                           href="modules/producto/print.php" target="_blank">
+                            <i class="fa fa-print"></i> IMPRIMIR PRODUCTOS
+                        </a>
+                    </section>
 
-                <section class="content-header">
-                </section>
+                    <h2>Lista de Productos</h2>
+
                     <table id="dataTables1" class="table table-bordered table-striped table-hover">
-                        <h2>Lista de Productos</h2>
                         <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Unidad de Medida</th>
-                                <th>Proveedor</th>
-                                <th>Marca</th>
-                                <th>Producto</th>
-                                <th>Precio</th>
-                                <th>Precio Final</th>
-                                <th>Acción</th>
-                            </tr>
+                        <tr>
+                            <th class="center">Código</th>
+                            <th class="center">Tipo</th>
+                            <th class="center">Unidad</th>
+                            <th class="center">Proveedor</th>
+                            <th class="center">Marca</th>
+                            <th class="center">Producto</th>
+                            <th class="center">Costo</th>
+                            <th class="center">Precio Servicio</th>
+                            <th class="center">Estado</th>
+                            <th class="center">Acción</th>
+                        </tr>
                         </thead>
+
                         <tbody>
-                            <?php 
-                            $nro=1;
-                            $query = mysqli_query($mysqli, "SELECT
-                            pro.id_producto AS id_producto,
-                            m.id_marca AS id_marca,
-                            uni.id_u_medida AS id_u_medida,
-                            m.marca_descrip AS marca_descrip,
-                            uni.u_descrip AS u_descrip,
-                            pro.p_descrip AS p_descrip,
-                            pro.p_precio_servicio AS p_precio_servicio,
-                            pro.p_costo_actual AS p_costo_actual,
-                            prov.cod_proveedor AS cod_proveedor 
+                        <?php
+                        include __DIR__ . '/../../config/database.php';
+
+                        $query = mysqli_query($mysqli, "
+                            SELECT 
+                                pro.id_producto,
+                                pro.p_descrip,
+                                pro.p_precio_servicio,
+                                pro.p_costo_actual,
+                                pro.tipo_producto,
+                                pro.estado,
+                                m.marca_descrip,
+                                uni.u_descrip,
+                                prov.razon_social
                             FROM productos pro
-                            JOIN proveedor prov
-                            JOIN marcas m
-                            JOIN u_medida uni
-                            WHERE 
-                              pro.cod_proveedor = prov.cod_proveedor
+                            LEFT JOIN proveedor prov ON pro.cod_proveedor = prov.cod_proveedor
+                            LEFT JOIN marcas m ON pro.id_marca = m.id_marca
+                            LEFT JOIN u_medida uni ON pro.id_u_medida = uni.id_u_medida
+                            ORDER BY pro.id_producto ASC
+                        ");
 
-                            AND pro.id_u_medida = uni.id_u_medida
+                        while ($data = mysqli_fetch_assoc($query)) {
 
-                            AND pro.id_marca = m.id_marca;")
-                            or die('Error'.mysqli_error($mysqli));
-                            while($data = mysqli_fetch_assoc($query)){
-                               $id_producto = $data["id_producto"];
-                               $u_descrip = $data["u_descrip"];
-                               $p_descrip = $data["p_descrip"];
-                               $marca_descrip = $data["marca_descrip"];
-                               $p_descrip = $data["p_descrip"];
-                               $precio = $data["p_costo_actual"];
-                               $precio_final = $data["p_precio_servicio"];
-                               echo "<tr>
-                               <td class=''>$id_producto</td>
-                               <td class=''>$u_descrip</td>
-                               <td class=''>$p_descrip</td>
-                               <td class=''>$marca_descrip</td>
-                               <td class=''>$p_descrip</td>
-                               <td class=''>$precio</td>
-                               <td class=''>$precio_final</td>
-                               <td class='' width='80'>
-                               <div>
-                               <a data-toggle='tooltip' data-placement='top' title='Modificar datos de Proveedor' style='margin-right:5px' 
-                               class='btn btn-primary btn-sm' href='?module=form_producto&form=edit&id_producto=$data[id_producto]&id_u_medida=$data[id_u_medida]&id_marca=$data[id_marca]&cod_proveedor=$data[cod_proveedor]'>
-                                <i class='glyphicon glyphicon-edit' style='color:#fff'></i></a>";
-                                ?>
-                                <a data-toggle="tooltip" data-data-placement="top" title="Eliminar datos" class="btn btn-danger btn-sm" 
-                                href="modules/producto/proses.php?act=delete&id_producto=<?php echo $data['id_producto']; ?>"
-                                onclick="return confirm('Eliminar Producto ? <?php echo $data['p_descrip']; ?>')">
-                                <i class="glyphicon glyphicon-trash"></i>
-                                </a>
-                                <?php echo "</div></td></tr>" ?>
-                            <?php } ?>
+                            $estado_texto = ($data["estado"] == 1) ? "Activo" : "Inactivo";
+                            $fila_clase   = ($data["estado"] == 1) ? "" : "class='danger'";
+
+                            echo "
+                            <tr $fila_clase>
+                                <td class='center'>{$data['id_producto']}</td>
+                                <td class='center'>".ucfirst($data['tipo_producto'])."</td>
+                                <td class='center'>{$data['u_descrip']}</td>
+                                <td class='center'>{$data['razon_social']}</td>
+                                <td class='center'>{$data['marca_descrip']}</td>
+                                <td class='center'>{$data['p_descrip']}</td>
+                                <td class='center'>{$data['p_costo_actual']}</td>
+                                <td class='center'>{$data['p_precio_servicio']}</td>
+                                <td class='center'>{$estado_texto}</td>
+
+                                <td class='center'>
+                                    <div>
+                                        <a class='btn btn-primary btn-sm'
+                                           data-toggle='tooltip'
+                                           title='Modificar Producto'
+                                           href='?module=form_producto&form=edit&id_producto={$data['id_producto']}'>
+                                            <i class='glyphicon glyphicon-edit'></i>
+                                        </a>
+
+                                        <a class='btn btn-danger btn-sm'
+                                           data-toggle='tooltip'
+                                           title='Eliminar Producto'
+                                           href='modules/producto/proses.php?act=delete&id_producto={$data['id_producto']}'
+                                           onclick=\"return confirm('¿Eliminar producto {$data['p_descrip']}?')\">
+                                            <i class='glyphicon glyphicon-trash'></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>";
+                        }
+                        ?>
                         </tbody>
                     </table>
+
                 </div>
             </div>
         </div>
