@@ -15,16 +15,16 @@
         <a class="btn btn-warning btn-social pull-right" style="margin-right:10px;" href="?module=recepcion_archivados">
            <i class="fa fa-archive"></i> Archivados
         </a>
+
+        <a class="btn btn-warning btn-social pull-right" style="margin-right:10px;" href="modules/recepcion_equipo/reporte_recepciones.php" target="_blank">
+            <i class="fa fa-print"></i> IMPRIMIR RECEPCIONES
+        </a>
     </h1>
 </section>
 
-
 <section class="content">
-<div class="row">
-<div class="col-md-12">
-
-<div class="box box-primary">
-<div class="box-body">
+<div class="row"><div class="col-md-12">
+<div class="box box-primary"><div class="box-body">
 
 <h2>Lista de Recepciones</h2>
 
@@ -59,7 +59,7 @@ $q = mysqli_query($mysqli,"
 
 while ($row = mysqli_fetch_assoc($q)) {
 
-    // ==== COLORES IGUAL QUE DIAGNÓSTICO ====
+    // ==== COLORES ====
     $estado = $row["estado"];
     $badgeColor = [
         "recepcionado"       => "primary",
@@ -70,7 +70,19 @@ while ($row = mysqli_fetch_assoc($q)) {
         "entregado"          => "success"
     ];
     $color = $badgeColor[$estado] ?? "default";
-    $badge = "<span class='label label-$color'>$estado</span>";
+
+    // botón editable
+    $badge = "
+        <button 
+            class='btn btn-$color btn-xs btn-estado'
+            data-id='{$row['id_recepcion_equipo']}'
+            data-estado='$estado'
+            data-toggle='modal'
+            data-target='#modalEstado'
+        >
+            $estado <i class='fa fa-pencil'></i>
+        </button>
+    ";
 
     echo "
     <tr>
@@ -94,10 +106,11 @@ while ($row = mysqli_fetch_assoc($q)) {
                 <i class='fa fa-archive'></i>
             </button>
 
-            <a class='btn btn-danger btn-sm'
-               onclick=\"return confirm('¿Eliminar registro?')\"
-               href='modules/recepcion_equipo/proses.php?accion=eliminar&id_recepcion_equipo={$row['id_recepcion_equipo']}'>
-               <i class='glyphicon glyphicon-trash'></i>
+            <a class='btn btn-default btn-sm'
+                href='modules/recepcion_equipo/imprimir_recepcion.php?id={$row['id_recepcion_equipo']}'
+                target='_blank'
+                title='Imprimir recepción'>
+                <i class='fa fa-print'></i>
             </a>
         </td>
     </tr>";
@@ -108,8 +121,76 @@ while ($row = mysqli_fetch_assoc($q)) {
 
 </div></div></div></div></section>
 
+<!-- ==============================
+     MODAL CAMBIAR ESTADO
+=================================-->
+<div class="modal fade" id="modalEstado" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <form id="formCambiarEstado">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h4 class="modal-title">Cambiar Estado</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <input type="hidden" id="estado_id" name="id_recepcion_equipo">
+
+          <label>Seleccione el estado:</label>
+          <select id="estado_valor" name="estado" class="form-control" required>
+              <option value="">--Elegir estado--</option>
+              <option value="recepcionado">Recepcionado</option>
+              <option value="en_diagnostico">En diagnóstico</option>
+              <option value="esperando_repuestos">Esperando repuestos</option>
+              <option value="pendiente_cliente">Pendiente cliente</option>
+              <option value="listo">Listo</option>
+              <option value="entregado">Entregado</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Guardar</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
-// ==== ARCHIVAR (IGUAL QUE DIAGNÓSTICO) ====
+// ====================================
+//   ABRIR MODAL ESTADO
+// ====================================
+$(document).on("click", ".btn-estado", function() {
+    $("#estado_id").val($(this).data("id"));
+    $("#estado_valor").val($(this).data("estado"));
+});
+
+// ====================================
+//     GUARDAR CAMBIO ESTADO (AJAX)
+// ====================================
+$("#formCambiarEstado").submit(function(e){
+    e.preventDefault();
+
+    $.ajax({
+        url: "modules/recepcion_equipo/proses.php?accion=cambiar_estado",
+        type: "POST",
+        data: $(this).serialize(),
+        dataType: "json",
+        success: function(r){
+            if(r.status === "ok"){
+                $("#modalEstado").modal("hide");
+                location.reload();
+            } else {
+                alert("Error al actualizar estado");
+            }
+        }
+    });
+});
+
+// ==== ARCHIVAR ====
 $(".archivar").click(function(){
     if(!confirm("¿Archivar esta recepción?")) return;
 

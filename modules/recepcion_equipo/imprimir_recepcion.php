@@ -14,32 +14,29 @@ $id = intval($_GET['id']);
 
 // Obtener datos
 $query = mysqli_query($mysqli, "
-    SELECT dg.*, 
-           re.equipo_modelo, re.equipo_descripcion,
+    SELECT re.*,
            cl.cli_razon_social,
            cl.cli_direccion,
            cl.cli_telefono,
-           cl.ci_ruc,                     /* <-- AGREGADO */
+           cl.ci_ruc,
            m.marca_descrip,
            te.tipo_descrip
-    FROM diagnostico dg
-    LEFT JOIN recepcion_equipo re ON dg.id_recepcion_equipo = re.id_recepcion_equipo
+    FROM recepcion_equipo re
     LEFT JOIN clientes cl ON re.id_cliente = cl.id_cliente
     LEFT JOIN marcas m ON re.id_marca = m.id_marca
     LEFT JOIN tipo_equipo te ON re.id_tipo_equipo = te.id_tipo_equipo
-    WHERE dg.id_diagnostico = $id
+    WHERE re.id_recepcion_equipo = $id
 ") or die(mysqli_error($mysqli));
 
 $data = mysqli_fetch_assoc($query);
-if (!$data) { die("Diagnóstico no encontrado."); }
+if (!$data) { die("Recepción no encontrada."); }
 
 // Config DOMPDF
 $options = new Options();
 $options->set('isRemoteEnabled', true);
-
 $dompdf = new Dompdf($options);
 
-// Ruta del logo
+// Logo
 $logo_path = __DIR__ . "/assets/logo.png";
 $logo_base64 = base64_encode(file_get_contents($logo_path));
 $logo_src = "data:image/png;base64," . $logo_base64;
@@ -64,16 +61,16 @@ td, th { padding:6px; border:1px solid #000; }
     <img src="'.$logo_src.'" style="width:140px; margin-bottom:10px;">
 </div>
 
-<h2>DIAGNÓSTICO</h2>
+<h2>RECEPCIÓN DE EQUIPO</h2>
 
-<p class="section-title">Datos del Diagnóstico</p>
+<p class="section-title">Datos de la Recepción</p>
 <table>
     <tr>
-        <th>ID Diagnóstico</th><td>'.$data['id_diagnostico'].'</td>
-        <th>Fecha</th><td>'.$data['fecha_diagnostico'].'</td>
+        <th>ID Recepción</th><td>'.$data['id_recepcion_equipo'].'</td>
+        <th>Fecha</th><td>'.$data['fecha_recepcion'].'</td>
     </tr>
     <tr>
-        <th>Estado</th><td>'.$data['estado_diagnostico'].'</td>
+        <th>Estado</th><td>'.ucfirst($data['estado']).'</td>
         <th>Cliente</th><td>'.$data['cli_razon_social'].'</td>
     </tr>
 </table>
@@ -101,26 +98,6 @@ td, th { padding:6px; border:1px solid #000; }
     </tr>
 </table>
 
-<p class="section-title">Detalles del Diagnóstico</p>
-<table>
-    <tr>
-        <th width="25%">Falla</th>
-        <td>'.$data['falla_diagnostico'].'</td>
-    </tr>
-    <tr>
-        <th>Causa</th>
-        <td>'.$data['causa_diagnostico'].'</td>
-    </tr>
-    <tr>
-        <th>Solución</th>
-        <td>'.$data['solucion_diagnostico'].'</td>
-    </tr>
-    <tr>
-        <th>Observaciones</th>
-        <td>'.$data['observaciones'].'</td>
-    </tr>
-</table>
-
 <div class="firma-box">
     <div class="firma-col">
         <div class="firma-line"></div>
@@ -129,7 +106,7 @@ td, th { padding:6px; border:1px solid #000; }
 
     <div class="firma-col">
         <div class="firma-line"></div>
-        <p>Aclaración</p>
+        <p>Firma del Cliente</p>
     </div>
 </div>
 ';
@@ -140,7 +117,7 @@ $dompdf->setPaper('A4', 'portrait');
 $dompdf->render();
 
 // Abrir en navegador sin descargar automáticamente
-$dompdf->stream("diagnostico_$id.pdf", ["Attachment" => false]);
+$dompdf->stream("recepcion_$id.pdf", ["Attachment" => false]);
 
 exit;
 ?>

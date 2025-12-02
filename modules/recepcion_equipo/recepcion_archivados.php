@@ -1,4 +1,4 @@
-<?php
+<?php 
 include "config/database.php";
 ?>
 
@@ -21,7 +21,7 @@ include "config/database.php";
 <div class="row"><div class="col-md-12">
 <div class="box box-primary"><div class="box-body">
 
-<table id="dataTables1" class="table table-bordered table-striped">
+<table id="archivadosTable" class="table table-bordered table-striped">
 <thead>
 <tr>
     <th>ID</th>
@@ -47,6 +47,7 @@ $q = mysqli_query($mysqli,"
     ORDER BY re.id_recepcion_equipo DESC
 ");
 
+// NO imprimir filas vacías — DataTables se encarga del mensaje
 while($row = mysqli_fetch_assoc($q)){
     echo "
     <tr>
@@ -73,6 +74,9 @@ while($row = mysqli_fetch_assoc($q)){
 </div></div></div></div></section>
 
 <script>
+// =============================
+// RESTAURAR (DESARCHIVAR)
+// =============================
 $(".desarchivar").click(function(){
     if(!confirm("¿Desarchivar recepción?")) return;
 
@@ -83,11 +87,27 @@ $(".desarchivar").click(function(){
         function(r){
             if(r.status === "ok"){
                 alert("Restaurado correctamente");
-                location.reload();
+                window.location.reload(); // 🔥 Solución compatible con DataTables
             } else {
                 alert("Error al restaurar");
             }
         }, "json"
     );
+});
+</script>
+
+<script>
+// =============================
+// ACTIVAR DATATABLES
+// =============================
+$(document).ready(function() {
+    $('#archivadosTable').DataTable({
+        language: {
+            url: "assets/plugins/datatables/es_es.json",
+            emptyTable: "No hay registros archivados"
+        },
+        responsive: true,
+        autoWidth: false
+    });
 });
 </script>

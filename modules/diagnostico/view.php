@@ -6,9 +6,19 @@
     <hr>
     <h1>
         <i class="fa fa-stethoscope icon-title">Diagnóstico de Equipos</i>
+
         <a class="btn btn-primary btn-social pull-right" href="?module=form_diagnostico&form=add" title="Agregar" data-toggle="tooltip">
             <i class="fa fa-plus"></i>Agregar
         </a>
+
+        <a class="btn btn-warning btn-social pull-right" style="margin-right:10px;" href="modules/diagnostico/diagnostico_archivados.php">
+           <i class="fa fa-archive"></i> Archivados
+        </a>
+        <a class="btn btn-warning btn-social pull-right" style="margin-right:10px;" href="modules/diagnostico/reporte_diagnosticos.php" target="_blank">
+            <i class="fa fa-print"></i> IMPRIMIR DIAGNÓSTICOS
+        </a>
+        
+
     </h1>
 </section>
 
