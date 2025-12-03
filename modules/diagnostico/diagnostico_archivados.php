@@ -1,5 +1,5 @@
 <?php 
-include "../../config/database.php";
+include "config/database.php";
 ?>
 
 <section class="content-header">
@@ -21,7 +21,7 @@ include "../../config/database.php";
 <div class="row"><div class="col-md-12">
 <div class="box box-primary"><div class="box-body">
 
-<table id="dataTables1" class="table table-bordered table-striped">
+<table id="archivadosTable" class="table table-bordered table-striped">
 <thead>
 <tr>
     <th>ID</th>
@@ -31,6 +31,7 @@ include "../../config/database.php";
     <th>Marca</th>
     <th>Tipo</th>
     <th>Modelo</th>
+    <th>Descripcion</th>
     <th>Falla</th>
     <th>Causa</th>
     <th>Solución</th>
@@ -42,8 +43,12 @@ include "../../config/database.php";
 <tbody>
 <?php
 $q = mysqli_query($mysqli,"
-    SELECT dg.*, re.equipo_modelo, cl.cli_razon_social, 
-           m.marca_descrip, te.tipo_descrip
+    SELECT dg.*, 
+           re.equipo_modelo,
+           re.equipo_descripcion,
+           cl.cli_razon_social,
+           m.marca_descrip,
+           te.tipo_descrip
     FROM diagnostico dg
     LEFT JOIN recepcion_equipo re ON dg.id_recepcion_equipo = re.id_recepcion_equipo
     LEFT JOIN clientes cl ON re.id_cliente = cl.id_cliente
@@ -53,11 +58,7 @@ $q = mysqli_query($mysqli,"
     ORDER BY dg.id_diagnostico DESC
 ");
 
-if (mysqli_num_rows($q) == 0){
-    echo "<tr><td colspan='12' class='text-center'>No hay registros archivados</td></tr>";
-}
-
-while($row = mysqli_fetch_assoc($q)){
+while ($row = mysqli_fetch_assoc($q)) {
     echo "
     <tr>
         <td>{$row['id_diagnostico']}</td>
@@ -67,6 +68,7 @@ while($row = mysqli_fetch_assoc($q)){
         <td>{$row['marca_descrip']}</td>
         <td>{$row['tipo_descrip']}</td>
         <td>{$row['equipo_modelo']}</td>
+        <td>{$row['equipo_descripcion']}</td>
         <td>{$row['falla_diagnostico']}</td>
         <td>{$row['causa_diagnostico']}</td>
         <td>{$row['solucion_diagnostico']}</td>
@@ -87,8 +89,11 @@ while($row = mysqli_fetch_assoc($q)){
 </div></div></div></div></section>
 
 <script>
+// =============================
+// RESTAURAR
+// =============================
 $(".desarchivar").click(function(){
-    if(!confirm("¿Restaurar este registro?")) return;
+    if(!confirm("¿Restaurar diagnóstico?")) return;
 
     let id = $(this).data("id");
 
@@ -97,9 +102,27 @@ $(".desarchivar").click(function(){
         function(r){
             if(r.status === "ok"){
                 alert("Restaurado correctamente");
-                window.location.href = "?module=diagnostico_archivados";
+                window.location.reload();
+            } else {
+                alert("Error al restaurar");
             }
         }, "json"
     );
+});
+</script>
+
+<script>
+// =============================
+// ACTIVAR DATATABLES
+// =============================
+$(document).ready(function() {
+    $('#archivadosTable').DataTable({
+        language: {
+            url: "assets/plugins/datatables/es_es.json",
+            emptyTable: "No hay diagnósticos archivados"
+        },
+        responsive: true,
+        autoWidth: false
+    });
 });
 </script>

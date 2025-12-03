@@ -197,13 +197,35 @@ if ($_GET['form'] == 'add') { ?>
 </div></form></div></div></div>
 
 <script>
-// rellenar selects también en editar
+// SOLO cargamos el resto de las opciones, sin borrar la actual
+function cargarSelectEdit(endpoint, selectId, selectedValue){
+    $.getJSON("modules/recepcion_equipo/proses.php?accion=" + endpoint, function(data){
+        let $sel = $("#" + selectId);
+
+        // No borrar la opción actual
+        $sel.find("option:not([value='"+selectedValue+"'])").remove();
+
+        data.forEach(item => {
+            let id = Object.values(item)[0];
+            let nombre = Object.values(item)[1];
+
+            if(id != selectedValue) {
+                $sel.append(`<option value="${id}">${nombre}</option>`);
+            }
+        });
+
+        $sel.val(selectedValue);
+        $sel.trigger("chosen:updated");
+    });
+}
+
 $(document).ready(function(){
-    cargarSelect("consultarCliente", "cliente", "Seleccione un cliente");
-    cargarSelect("consultarMarca", "marca", "Seleccione una marca");
-    cargarSelect("consultarTipo_Equipo", "tipo_equipo", "Seleccione un tipo");
+    cargarSelectEdit("consultarCliente", "cliente", "<?= $data['id_cliente']; ?>");
+    cargarSelectEdit("consultarMarca", "marca", "<?= $data['id_marca']; ?>");
+    cargarSelectEdit("consultarTipo_Equipo", "tipo_equipo", "<?= $data['id_tipo_equipo']; ?>");
 });
 </script>
+
 
 </section>
 

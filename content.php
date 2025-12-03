@@ -149,7 +149,14 @@ if(empty($_SESSION["username"]) && empty($_SESSION["password"])){
     }
     elseif($_GET["module"]=="diagnostico"){
         include "modules/diagnostico/view.php";
+
+    }elseif($_GET["module"]=="diagnostico_archivados"){
+
+        include "modules/diagnostico/diagnostico_archivados.php";
     }
+
+
+    
 }
 
 ?>
