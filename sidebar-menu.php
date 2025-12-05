@@ -59,6 +59,7 @@ if($_SESSION['permisos_acceso']=='Super Admin'){ ?>
                 <ul class="treeview-menu">
                     <li><a href="?module=recepcion_equipo"><i class="fa fa-circle-o"></i>Recepcion de Equipo</a></li>
                     <li><a href="?module=diagnostico"><i class="fa fa-circle-o"></i>Diagnostico</a></li>
+                    <li><a href="?module=presupuesto"><i class="fa fa-circle-o"></i>Presupuesto</a></li>
                 </ul>
             </li>
 

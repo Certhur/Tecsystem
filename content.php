@@ -154,6 +154,16 @@ if(empty($_SESSION["username"]) && empty($_SESSION["password"])){
 
         include "modules/diagnostico/diagnostico_archivados.php";
     }
+    elseif($_GET["module"]=="form_presupuesto"){
+        include "modules/presupuesto/form.php";
+    }
+    elseif($_GET["module"]=="presupuesto"){
+        include "modules/presupuesto/view.php";
+
+    }elseif($_GET["module"]=="presupuesto_archivados"){
+
+        include "modules/presupuesto/presupuesto_archivados.php";
+    }
 
 
     

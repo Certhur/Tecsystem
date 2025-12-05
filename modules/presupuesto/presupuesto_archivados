@@ -1,0 +1,124 @@
+<?php 
+include "config/database.php";
+?>
+
+<section class="content-header">
+    <ol class="breadcrumb">
+        <li><a href="?module=start"><i class="fa fa-home"></i> Inicio</a></li>
+        <li class="active"><a href="?module=presupuesto_archivados">Presupuestos Archivados</a></li>
+    </ol>
+    <br><hr>
+
+    <h1>
+        <i class="fa fa-archive icon-title"></i> Presupuestos Archivados
+        <a href="?module=presupuesto" class="btn btn-default pull-right">
+            <i class="fa fa-arrow-left"></i> Volver
+        </a>
+    </h1>
+</section>
+
+<section class="content">
+<div class="row"><div class="col-md-12">
+<div class="box box-primary"><div class="box-body">
+
+<table id="archivadosTable" class="table table-bordered table-striped table-hover">
+<thead>
+<tr>
+    <th class="center">ID</th>
+    <th class="center">Fecha</th>
+    <th class="center">Cliente</th>
+    <th class="center">Equipo</th>
+    <th class="center">Modelo</th>
+    <th class="center">Estado</th>
+    <th class="center">Total</th>
+    <th class="center">Acciones</th>
+</tr>
+</thead>
+
+<tbody>
+<?php
+$q = mysqli_query($mysqli, "
+    SELECT p.*,
+           dg.id_diagnostico,
+           re.equipo_modelo,
+           re.equipo_descripcion,
+           m.marca_descrip,
+           te.tipo_descrip,
+           cl.cli_razon_social
+    FROM presupuesto p
+    LEFT JOIN diagnostico dg      ON p.id_diagnostico      = dg.id_diagnostico
+    LEFT JOIN recepcion_equipo re ON dg.id_recepcion_equipo = re.id_recepcion_equipo
+    LEFT JOIN clientes cl         ON re.id_cliente         = cl.id_cliente
+    LEFT JOIN marcas m            ON re.id_marca           = m.id_marca
+    LEFT JOIN tipo_equipo te      ON re.id_tipo_equipo     = te.id_tipo_equipo
+    WHERE p.estado = 'Archivado'
+    ORDER BY p.id_presupuesto DESC
+");
+
+// DataTables se encarga de mostrar "sin registros" si no hay filas
+while ($row = mysqli_fetch_assoc($q)) {
+
+    $equipo_txt = trim($row['tipo_descrip'] . ' ' . $row['marca_descrip']);
+
+    echo "
+    <tr>
+        <td class='center'>{$row['id_presupuesto']}</td>
+        <td class='center'>{$row['fecha_presupuesto']}</td>
+        <td class='center'>{$row['cli_razon_social']}</td>
+        <td class='center'>{$equipo_txt}</td>
+        <td class='center'>{$row['equipo_modelo']}</td>
+        <td class='center'>{$row['estado']}</td>
+        <td class='center'>".number_format($row['total'],2,',','.')."</td>
+
+        <td class='center' width='80'>
+            <button class='btn btn-success btn-sm desarchivar'
+                    data-id='{$row['id_presupuesto']}'>
+                <i class='fa fa-undo'></i> Restaurar
+            </button>
+        </td>
+    </tr>";
+}
+?>
+</tbody>
+</table>
+
+</div></div></div></div></section>
+
+<script>
+// =============================
+// RESTAURAR (DESARCHIVAR)
+// =============================
+$(".desarchivar").click(function(){
+    if(!confirm("¿Desarchivar presupuesto?")) return;
+
+    let id = $(this).data("id");
+
+    $.post("modules/presupuesto/proses.php?accion=desarchivar",
+        { id_presupuesto: id },
+        function(r){
+            if(r.status === "ok"){
+                alert("Presupuesto restaurado correctamente");
+                window.location.reload(); // compatible con DataTables
+            } else {
+                alert("Error al restaurar presupuesto");
+            }
+        }, "json"
+    );
+});
+</script>
+
+<script>
+// =============================
+// ACTIVAR DATATABLES
+// =============================
+$(document).ready(function() {
+    $('#archivadosTable').DataTable({
+        language: {
+            url: "assets/plugins/datatables/es_es.json",
+            emptyTable: "No hay presupuestos archivados"
+        },
+        responsive: true,
+        autoWidth: false
+    });
+});
+</script>
