@@ -1,655 +1,621 @@
-<?php
+<?php 
 include "config/database.php";
 
-if ($_GET['form'] == 'add') { ?>
-    <section class="content-header">
-        <h1><i class="fa fa-edit icon-title"></i> Agregar Presupuesto</h1>
-        <ol class="breadcrumb">
-            <li><a href="?module=start"><i class="fa fa-home"></i>Inicio</a></li>
-            <li><a href="?module=presupuesto">Presupuestos</a></li>
-            <li class="active">Agregar</li>
-        </ol>
-    </section>
+$form = $_GET['form'] ?? 'add';
 
-    <section class="content">
-      <div class="row"><div class="col-md-12">
-      <div class="box box-primary"><div class="box-body">
+/* ======================================================
+   OBTENER LISTAS REFERENCIALES
+====================================================== */
 
-        <form role="form" class="form-horizontal"
-              action="modules/presupuesto/proses.php?accion=insertar"
-              method="POST" id="formPresupuesto">
+// Diagnósticos finalizados (para ADD)
+$lista_diagnosticos = mysqli_query($mysqli,"
+    SELECT dg.id_diagnostico,
+           re.id_recepcion_equipo,
+           re.equipo_modelo,
+           cl.cli_razon_social
+    FROM diagnostico dg
+    INNER JOIN recepcion_equipo re ON dg.id_recepcion_equipo = re.id_recepcion_equipo
+    INNER JOIN clientes cl         ON re.id_cliente = cl.id_cliente
+    WHERE dg.estado_diagnostico = 'Finalizado'
+    ORDER BY dg.id_diagnostico DESC
+");
 
-          <!-- FECHA -->
-          <div class="form-group">
-              <label class="col-sm-2 control-label">Fecha Presupuesto :</label>
-              <div class="col-sm-5">
-                  <input type="date" class="form-control"
-                         value="<?= date('Y-m-d'); ?>" readonly>
-              </div>
-          </div>
+// Productos (repuestos)
+$lista_productos = mysqli_query($mysqli,"
+    SELECT id_producto, p_descrip, p_precio_servicio
+    FROM productos
+    WHERE tipo_producto = 'repuesto' AND estado = 1
+    ORDER BY p_descrip ASC
+");
 
-          <!-- DIAGNÓSTICO (FINALIZADO) -->
-          <div class="form-group">
-              <label class="col-sm-2 control-label">Diagnóstico :</label>
-              <div class="col-sm-5">
-                  <select class="chosen-select" id="id_diagnostico" name="id_diagnostico" required>
-                      <option value="" disabled selected>Seleccione un diagnóstico finalizado</option>
-                  </select>
-              </div>
-          </div>
+// Servicios
+$lista_servicios = mysqli_query($mysqli,"
+    SELECT id_tipo_servicio, tipo_servicio_descrip, tipo_servicio_monto
+    FROM tipo_servicio
+    WHERE tipo_servicio_estado = 1
+    ORDER BY tipo_servicio_descrip ASC
+");
 
-          <!-- BLOQUE DATOS CLIENTE / EQUIPO -->
-          <div class="form-group">
-              <div class="col-sm-6">
-                  <h4>Datos del Cliente</h4>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Cliente :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control" id="cli_razon_social" readonly>
-                      </div>
-                  </div>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">CI/RUC :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control" id="ci_ruc" readonly>
-                      </div>
-                  </div>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Teléfono :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control" id="cli_telefono" readonly>
-                      </div>
-                  </div>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Dirección :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control" id="cli_direccion" readonly>
-                      </div>
-                  </div>
-              </div>
+?>
 
-              <div class="col-sm-6">
-                  <h4>Datos del Equipo</h4>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Tipo :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control" id="tipo_descrip" readonly>
-                      </div>
-                  </div>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Marca :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control" id="marca_descrip" readonly>
-                      </div>
-                  </div>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Modelo :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control" id="equipo_modelo" readonly>
-                      </div>
-                  </div>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Descripción :</label>
-                      <div class="col-sm-8">
-                          <textarea class="form-control" id="equipo_descripcion" rows="2" readonly></textarea>
-                      </div>
-                  </div>
-              </div>
-          </div>
+<?php if ($form == 'add') { ?>
 
-          <hr>
+<!-- ==========================================
+     AGREGAR PRESUPUESTO
+========================================== -->
+<section class="content-header">
+    <h1>
+        <i class="fa fa-edit icon-title"></i> Agregar Presupuesto
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="?module=start"><i class="fa fa-home"></i>Inicio</a></li>
+        <li><a href="?module=presupuesto">Presupuestos</a></li>
+        <li class="active">Agregar</li>
+    </ol>
+</section>
 
-          <!-- TABLA DE ÍTEMS -->
-          <h4>Ítems del Presupuesto</h4>
-          <div class="table-responsive">
-            <table class="table table-bordered" id="tablaDetalles">
-                <thead>
-                    <tr>
-                        <th>Descripción</th>
-                        <th style="width:80px;">Cant.</th>
-                        <th style="width:120px;">Precio Unit.</th>
-                        <th style="width:120px;">Subtotal</th>
-                        <th style="width:50px;">Acción</th>
-                    </tr>
-                </thead>
-                <tbody id="tbodyDetalles">
-                    <tr>
-                        <td>
-                            <input type="text" name="detalle_descripcion[]" class="form-control" required>
-                        </td>
-                        <td>
-                            <input type="number" name="detalle_cantidad[]" class="form-control input-cant" min="1" value="1" required>
-                        </td>
-                        <td>
-                            <input type="number" name="detalle_precio[]" class="form-control input-precio" min="0" step="0.01" value="0.00" required>
-                        </td>
-                        <td>
-                            <input type="text" name="detalle_subtotal[]" class="form-control input-subtotal" value="0.00" readonly>
-                        </td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-danger btn-sm btnEliminarFila">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-          </div>
+<section class="content">
+<div class="row"><div class="col-md-12">
+<div class="box box-primary"><div class="box-body">
 
-          <button type="button" class="btn btn-default btn-sm" id="btnAgregarFila">
-              <i class="fa fa-plus"></i> Agregar ítem
-          </button>
+<form role="form" class="form-horizontal"
+      action="modules/presupuesto/proses.php?accion=insertar"
+      method="POST" id="formPresupuesto">
 
-          <hr>
+    <!-- ================= DATOS CABECERA ================ -->
+    <h4><strong>Datos del Diagnóstico / Cliente</strong></h4>
+    <hr>
 
-          <!-- TOTALES -->
-          <div class="form-group">
-              <label class="col-sm-2 control-label">Mano de Obra :</label>
-              <div class="col-sm-3">
-                  <input type="number" step="0.01" min="0"
-                         class="form-control" name="mano_obra" id="mano_obra" value="0.00">
-              </div>
-          </div>
+    <!-- FECHA -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Fecha Presupuesto :</label>
+        <div class="col-sm-3">
+            <input type="date" class="form-control" name="fecha_presupuesto"
+                   value="<?= date('Y-m-d'); ?>" readonly>
+        </div>
+    </div>
 
-          <div class="form-group">
-              <label class="col-sm-2 control-label">Subtotal :</label>
-              <div class="col-sm-3">
-                  <input type="text" class="form-control" name="subtotal" id="subtotal" value="0.00" readonly>
-              </div>
-          </div>
+    <!-- DIAGNÓSTICO -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Diagnóstico :</label>
+        <div class="col-sm-6">
+            <select class="form-control" name="id_diagnostico" id="id_diagnostico" required>
+                <option value="" disabled selected>Seleccione un diagnóstico finalizado</option>
+                <?php while($dg = mysqli_fetch_assoc($lista_diagnosticos)): ?>
+                    <option value="<?= $dg['id_diagnostico']; ?>">
+                        #<?= $dg['id_diagnostico']; ?> - <?= $dg['cli_razon_social']; ?> - <?= $dg['equipo_modelo']; ?>
+                    </option>
+                <?php endwhile; ?>
+            </select>
+        </div>
+    </div>
 
-          <div class="form-group">
-              <label class="col-sm-2 control-label">Total :</label>
-              <div class="col-sm-3">
-                  <input type="text" class="form-control" name="total" id="total" value="0.00" readonly>
-              </div>
-          </div>
+    <!-- CLIENTE -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Cliente :</label>
+        <div class="col-sm-6">
+            <input type="text" class="form-control" id="cliente" readonly>
+        </div>
+    </div>
 
-          <!-- OBSERVACIONES -->
-          <div class="form-group">
-              <label class="col-sm-2 control-label">Observaciones :</label>
-              <div class="col-sm-6">
-                  <textarea class="form-control" name="observaciones" rows="3"></textarea>
-              </div>
-          </div>
+    <!-- EQUIPO / MODELO -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Equipo :</label>
+        <div class="col-sm-3">
+            <input type="text" class="form-control" id="equipo" readonly>
+        </div>
 
-          <div class="box-footer">
-              <div class="col-sm-offset-2 col-sm-10">
-                  <input type="submit" class="btn btn-primary btn-submit" value="Guardar"
-                         onclick="return confirm('¿Guardar presupuesto?')">
-                  <a href="?module=presupuesto" class="btn btn-default btn-reset">Cancelar</a>
-              </div>
-          </div>
+        <label class="col-sm-1 control-label">Modelo :</label>
+        <div class="col-sm-3">
+            <input type="text" class="form-control" id="modelo" readonly>
+        </div>
+    </div>
 
-        </form>
+    <!-- ================= DETALLES ================ -->
+    <h4><strong>Detalles del Presupuesto</strong></h4>
+    <hr>
 
-      </div></div></div></div>
-
-      <script>
-      // ===============================
-      // Cargar diagnósticos finalizados
-      // ===============================
-      function cargarDiagnosticosFinalizados() {
-          $.getJSON("modules/presupuesto/proses.php?accion=consultarDiagnosticosFinalizados", function(data){
-              let $sel = $("#id_diagnostico");
-              $sel.empty();
-              $sel.append('<option value="" disabled selected>Seleccione un diagnóstico finalizado</option>');
-
-              data.forEach(function(item){
-                  // item.id_diagnostico, item.texto
-                  $sel.append(
-                      '<option value="'+item.id_diagnostico+'">'+item.texto+'</option>'
-                  );
-              });
-
-              $sel.trigger("chosen:updated");
-          });
-      }
-
-      // ===============================
-      // Datos del diagnóstico seleccionado
-      // ===============================
-      function cargarDatosDiagnostico(id) {
-          if(!id) return;
-          $.getJSON("modules/presupuesto/proses.php?accion=datosDiagnostico&id="+id, function(d){
-              if(!d) return;
-              $("#cli_razon_social").val(d.cli_razon_social);
-              $("#ci_ruc").val(d.ci_ruc);
-              $("#cli_telefono").val(d.cli_telefono);
-              $("#cli_direccion").val(d.cli_direccion);
-              $("#tipo_descrip").val(d.tipo_descrip);
-              $("#marca_descrip").val(d.marca_descrip);
-              $("#equipo_modelo").val(d.equipo_modelo);
-              $("#equipo_descripcion").val(d.equipo_descripcion);
-          });
-      }
-
-      // ===============================
-      // Detalle: cálculos
-      // ===============================
-      function recalcularFila($tr){
-          let cant   = parseFloat($tr.find(".input-cant").val())   || 0;
-          let precio = parseFloat($tr.find(".input-precio").val()) || 0;
-          let sub    = cant * precio;
-          $tr.find(".input-subtotal").val( sub.toFixed(2) );
-      }
-
-      function recalcularTotales(){
-          let subtotal = 0;
-          $(".input-subtotal").each(function(){
-              subtotal += parseFloat($(this).val()) || 0;
-          });
-          $("#subtotal").val( subtotal.toFixed(2) );
-
-          let mano = parseFloat($("#mano_obra").val()) || 0;
-          let total = subtotal + mano;
-          $("#total").val( total.toFixed(2) );
-      }
-
-      $(document).ready(function(){
-
-          cargarDiagnosticosFinalizados();
-
-          $("#id_diagnostico").change(function(){
-              let id = $(this).val();
-              cargarDatosDiagnostico(id);
-          });
-
-          // Eventos detalle
-          $(document).on("keyup change", ".input-cant, .input-precio", function(){
-              let $tr = $(this).closest("tr");
-              recalcularFila($tr);
-              recalcularTotales();
-          });
-
-          $("#mano_obra").on("keyup change", function(){
-              recalcularTotales();
-          });
-
-          // Agregar fila
-          $("#btnAgregarFila").click(function(){
-              let fila = `
+    <div class="table-responsive">
+        <table class="table table-bordered" id="tablaDetalles">
+            <thead>
+                <tr class="bg-info">
+                    <th style="width: 35%;">Descripción</th>
+                    <th style="width: 10%;">Cantidad</th>
+                    <th style="width: 15%;">Precio Unitario</th>
+                    <th style="width: 15%;">Subtotal</th>
+                    <th style="width: 25%;">Ítem Ref.</th>
+                    <th style="width: 5%;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Fila inicial -->
                 <tr>
-                    <td><input type="text" name="detalle_descripcion[]" class="form-control" required></td>
-                    <td><input type="number" name="detalle_cantidad[]" class="form-control input-cant" min="1" value="1" required></td>
-                    <td><input type="number" name="detalle_precio[]" class="form-control input-precio" min="0" step="0.01" value="0.00" required></td>
-                    <td><input type="text" name="detalle_subtotal[]" class="form-control input-subtotal" value="0.00" readonly></td>
+                    <td>
+                        <input type="text" name="detalle_descripcion[]" class="form-control desc">
+                    </td>
+                    <td>
+                        <input type="number" min="1" value="1" 
+                               name="detalle_cantidad[]" class="form-control cant">
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" min="0"
+                               name="detalle_precio[]" class="form-control precio">
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" min="0"
+                               name="detalle_subtotal[]" class="form-control subtotal" readonly>
+                    </td>
+                    <td>
+                        <select class="form-control selItem">
+                            <option value="" data-precio="0" data-desc="">-- Seleccionar referencia --</option>
+                            <optgroup label="Servicios">
+                                <?php mysqli_data_seek($lista_servicios, 0); ?>
+                                <?php while($s = mysqli_fetch_assoc($lista_servicios)): ?>
+                                    <option 
+                                        value="S<?= $s['id_tipo_servicio']; ?>"
+                                        data-precio="<?= $s['tipo_servicio_monto']; ?>"
+                                        data-desc="<?= htmlspecialchars($s['tipo_servicio_descrip'], ENT_QUOTES, 'UTF-8'); ?>"
+                                    >
+                                        <?= $s['tipo_servicio_descrip']; ?> (Serv.)
+                                    </option>
+                                <?php endwhile; ?>
+                            </optgroup>
+                            <optgroup label="Productos / Repuestos">
+                                <?php mysqli_data_seek($lista_productos, 0); ?>
+                                <?php while($p = mysqli_fetch_assoc($lista_productos)): ?>
+                                    <option 
+                                        value="P<?= $p['id_producto']; ?>"
+                                        data-precio="<?= $p['p_precio_servicio']; ?>"
+                                        data-desc="<?= htmlspecialchars($p['p_descrip'], ENT_QUOTES, 'UTF-8'); ?>"
+                                    >
+                                        <?= $p['p_descrip']; ?> (Rep.)
+                                    </option>
+                                <?php endwhile; ?>
+                            </optgroup>
+                        </select>
+                    </td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm btnEliminarFila">
+                        <button type="button" class="btn btn-danger btn-sm btnQuitarFila">
                             <i class="fa fa-trash"></i>
                         </button>
                     </td>
-                </tr>`;
-              $("#tbodyDetalles").append(fila);
-          });
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-          // Eliminar fila
-          $(document).on("click", ".btnEliminarFila", function(){
-              let filas = $("#tbodyDetalles tr").length;
-              if(filas <= 1){
-                  alert("Debe existir al menos una fila.");
-                  return;
-              }
-              $(this).closest("tr").remove();
-              recalcularTotales();
-          });
+    <button type="button" id="btnAgregarFila" class="btn btn-default">
+        <i class="fa fa-plus"></i> Agregar línea
+    </button>
 
-      });
-      </script>
+    <hr>
 
-    </section>
+    <!-- ================= TOTALES ================ -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Mano de Obra :</label>
+        <div class="col-sm-2">
+            <input type="number" step="0.01" min="0"
+                   name="mano_obra" id="mano_obra" class="form-control" value="0.00">
+        </div>
 
-<?php
-// =============== EDITAR ===============
-} elseif ($_GET['form'] == 'edit') {
+        <label class="col-sm-2 control-label">Subtotal :</label>
+        <div class="col-sm-2">
+            <input type="number" step="0.01" min="0"
+                   name="subtotal" id="subtotal" class="form-control" readonly>
+        </div>
 
-    if (isset($_GET['id'])) {
-        $id_presupuesto = intval($_GET['id']);
+        <label class="col-sm-1 control-label">Total :</label>
+        <div class="col-sm-2">
+            <input type="number" step="0.01" min="0"
+                   name="total" id="total" class="form-control" readonly>
+        </div>
+    </div>
 
-        // Cabecera de presupuesto + joins para mostrar cliente/equipo
-        $q = mysqli_query($mysqli, "
-            SELECT p.*,
-                   dg.id_diagnostico,
-                   re.equipo_modelo,
-                   re.equipo_descripcion,
-                   m.marca_descrip,
-                   te.tipo_descrip,
-                   cl.cli_razon_social,
-                   cl.ci_ruc,
-                   cl.cli_telefono,
-                   cl.cli_direccion
-            FROM presupuesto p
-            LEFT JOIN diagnostico dg      ON p.id_diagnostico      = dg.id_diagnostico
-            LEFT JOIN recepcion_equipo re ON dg.id_recepcion_equipo = re.id_recepcion_equipo
-            LEFT JOIN clientes cl         ON re.id_cliente         = cl.id_cliente
-            LEFT JOIN marcas m            ON re.id_marca           = m.id_marca
-            LEFT JOIN tipo_equipo te      ON re.id_tipo_equipo     = te.id_tipo_equipo
-            WHERE p.id_presupuesto = $id_presupuesto
-        ");
-        $cab = mysqli_fetch_assoc($q);
+    <!-- OBSERVACIONES -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Observaciones :</label>
+        <div class="col-sm-6">
+            <textarea name="observaciones" class="form-control" rows="3"></textarea>
+        </div>
+    </div>
 
-        // Detalle
-        $detalles = [];
-        $qd = mysqli_query($mysqli, "
-            SELECT * FROM presupuesto_detalle
-            WHERE id_presupuesto = $id_presupuesto
-            ORDER BY id_detalle ASC
-        ");
-        while($r = mysqli_fetch_assoc($qd)) {
-            $detalles[] = $r;
+    <!-- BOTONES -->
+    <div class="box-footer">
+        <div class="col-sm-offset-2 col-sm-10">
+            <button type="submit" class="btn btn-primary"
+                    onclick="return confirm('¿Guardar presupuesto?')">
+                Guardar
+            </button>
+            <a href="?module=presupuesto" class="btn btn-default">Cancelar</a>
+        </div>
+    </div>
+
+</form>
+
+</div></div></div></div>
+</section>
+
+<script>
+// ===============================
+// CARGAR DATOS DEL DIAGNÓSTICO
+// ===============================
+$("#id_diagnostico").change(function(){
+    let id = $(this).val();
+    if(!id) return;
+
+    $.getJSON("modules/presupuesto/proses.php?accion=datos_diagnostico&id="+id,
+        function(d){
+            if(d){
+                $("#cliente").val(d.cli_razon_social);
+                $("#equipo").val(d.tipo_descrip);
+                $("#modelo").val(d.equipo_modelo);
+            }
         }
+    );
+});
+
+// ===============================
+// FUNCIONES DETALLES
+// ===============================
+function recalcularFila($tr){
+    let cant   = parseFloat($tr.find(".cant").val())   || 0;
+    let precio = parseFloat($tr.find(".precio").val()) || 0;
+    let sub    = cant * precio;
+    $tr.find(".subtotal").val(sub.toFixed(2));
+    recalcularTotales();
+}
+
+function recalcularTotales(){
+    let subtotal = 0;
+    $("#tablaDetalles tbody tr").each(function(){
+        let s = parseFloat($(this).find(".subtotal").val()) || 0;
+        subtotal += s;
+    });
+    $("#subtotal").val(subtotal.toFixed(2));
+
+    let mano = parseFloat($("#mano_obra").val()) || 0;
+    let total = subtotal + mano;
+    $("#total").val(total.toFixed(2));
+}
+
+// Cambio en cantidad / precio
+$(document).on("input", ".cant, .precio", function(){
+    let $tr = $(this).closest("tr");
+    recalcularFila($tr);
+});
+
+// Selección de item (servicio / producto)
+$(document).on("change", ".selItem", function(){
+    let opt = $(this).find("option:selected");
+    let desc = opt.data("desc") || "";
+    let precio = parseFloat(opt.data("precio")) || 0;
+    let $tr = $(this).closest("tr");
+
+    if(desc){
+        $tr.find(".desc").val(desc);
     }
-    ?>
-    <section class="content-header">
-        <h1><i class="fa fa-edit icon-title"></i> Modificar Presupuesto</h1>
-        <ol class="breadcrumb">
-            <li><a href="?module=start"><i class="fa fa-home"></i>Inicio</a></li>
-            <li><a href="?module=presupuesto">Presupuestos</a></li>
-            <li class="active">Modificar</li>
-        </ol>
-    </section>
+    if(precio > 0){
+        $tr.find(".precio").val(precio.toFixed(2));
+    }
+    if(!$tr.find(".cant").val()){
+        $tr.find(".cant").val(1);
+    }
+    recalcularFila($tr);
+});
 
-    <section class="content">
-      <div class="row"><div class="col-md-12">
-      <div class="box box-primary"><div class="box-body">
+// Agregar fila
+$("#btnAgregarFila").click(function(){
+    let $fila = $("#tablaDetalles tbody tr:first").clone();
 
-        <form role="form" class="form-horizontal"
-              action="modules/presupuesto/proses.php?accion=actualizar"
-              method="POST" id="formPresupuestoEdit">
+    $fila.find("input").val("");
+    $fila.find(".cant").val(1);
+    $fila.find(".selItem").val("");
 
-          <input type="hidden" name="id_presupuesto"
-                 value="<?php echo $cab['id_presupuesto']; ?>">
+    $("#tablaDetalles tbody").append($fila);
+});
 
-          <!-- FECHA (solo muestra) -->
-          <div class="form-group">
-              <label class="col-sm-2 control-label">Fecha Presupuesto :</label>
-              <div class="col-sm-5">
-                  <input type="text" class="form-control"
-                         value="<?php echo $cab['fecha_presupuesto']; ?>" readonly>
-              </div>
-          </div>
+// Quitar fila
+$(document).on("click", ".btnQuitarFila", function(){
+    let filas = $("#tablaDetalles tbody tr").length;
+    if(filas <= 1){
+        // limpiar en vez de eliminar
+        let $tr = $("#tablaDetalles tbody tr:first");
+        $tr.find("input").val("");
+        $tr.find(".cant").val(1);
+        $tr.find(".selItem").val("");
+        recalcularFila($tr);
+    } else {
+        $(this).closest("tr").remove();
+        recalcularTotales();
+    }
+});
 
-          <!-- DIAGNÓSTICO (no editable) -->
-          <div class="form-group">
-              <label class="col-sm-2 control-label">Diagnóstico :</label>
-              <div class="col-sm-5">
-                  <input type="text" class="form-control"
-                         value="ID #<?php echo $cab['id_diagnostico']; ?> - <?php echo $cab['cli_razon_social']; ?> - <?php echo $cab['equipo_modelo']; ?>"
-                         readonly>
-                  <input type="hidden" name="id_diagnostico"
-                         value="<?php echo $cab['id_diagnostico']; ?>">
-              </div>
-          </div>
+// Cambio en mano de obra
+$("#mano_obra").on("input", function(){
+    recalcularTotales();
+});
+</script>
 
-          <!-- BLOQUE DATOS CLIENTE / EQUIPO (solo lectura) -->
-          <div class="form-group">
-              <div class="col-sm-6">
-                  <h4>Datos del Cliente</h4>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Cliente :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control"
-                                 value="<?php echo $cab['cli_razon_social']; ?>" readonly>
-                      </div>
-                  </div>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">CI/RUC :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control"
-                                 value="<?php echo $cab['ci_ruc']; ?>" readonly>
-                      </div>
-                  </div>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Teléfono :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control"
-                                 value="<?php echo $cab['cli_telefono']; ?>" readonly>
-                      </div>
-                  </div>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Dirección :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control"
-                                 value="<?php echo $cab['cli_direccion']; ?>" readonly>
-                      </div>
-                  </div>
-              </div>
+<?php } elseif ($form == 'edit') { 
 
-              <div class="col-sm-6">
-                  <h4>Datos del Equipo</h4>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Tipo :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control"
-                                 value="<?php echo $cab['tipo_descrip']; ?>" readonly>
-                      </div>
-                  </div>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Marca :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control"
-                                 value="<?php echo $cab['marca_descrip']; ?>" readonly>
-                      </div>
-                  </div>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Modelo :</label>
-                      <div class="col-sm-8">
-                          <input type="text" class="form-control"
-                                 value="<?php echo $cab['equipo_modelo']; ?>" readonly>
-                      </div>
-                  </div>
-                  <div class="form-group">
-                      <label class="col-sm-4 control-label">Descripción :</label>
-                      <div class="col-sm-8">
-                          <textarea class="form-control" rows="2" readonly><?php echo $cab['equipo_descripcion']; ?></textarea>
-                      </div>
-                  </div>
-              </div>
-          </div>
+    // ================== EDITAR =======================
+    $id = intval($_GET['id'] ?? 0);
+    if($id <= 0){ echo "ID inválido"; exit; }
 
-          <hr>
+    $qCab = mysqli_query($mysqli,"
+        SELECT p.*, 
+               dg.id_recepcion_equipo,
+               re.equipo_modelo,
+               re.equipo_descripcion,
+               cl.cli_razon_social,
+               te.tipo_descrip
+        FROM presupuesto p
+        LEFT JOIN diagnostico dg       ON p.id_diagnostico = dg.id_diagnostico
+        LEFT JOIN recepcion_equipo re  ON dg.id_recepcion_equipo = re.id_recepcion_equipo
+        LEFT JOIN clientes cl          ON re.id_cliente = cl.id_cliente
+        LEFT JOIN tipo_equipo te       ON re.id_tipo_equipo = te.id_tipo_equipo
+        WHERE p.id_presupuesto = $id
+    ");
+    $cab = mysqli_fetch_assoc($qCab);
 
-          <!-- TABLA DETALLES -->
-          <h4>Ítems del Presupuesto</h4>
-          <div class="table-responsive">
-              <table class="table table-bordered" id="tablaDetallesEdit">
-                  <thead>
-                      <tr>
-                          <th>Descripción</th>
-                          <th style="width:80px;">Cant.</th>
-                          <th style="width:120px;">Precio Unit.</th>
-                          <th style="width:120px;">Subtotal</th>
-                          <th style="width:50px;">Acción</th>
-                      </tr>
-                  </thead>
-                  <tbody id="tbodyDetallesEdit">
-                      <?php
-                      if (count($detalles) == 0) {
-                          // fila vacía
-                          ?>
-                          <tr>
-                              <td><input type="text" name="detalle_descripcion[]" class="form-control" required></td>
-                              <td><input type="number" name="detalle_cantidad[]" class="form-control input-cant" min="1" value="1" required></td>
-                              <td><input type="number" name="detalle_precio[]" class="form-control input-precio" min="0" step="0.01" value="0.00" required></td>
-                              <td><input type="text" name="detalle_subtotal[]" class="form-control input-subtotal" value="0.00" readonly></td>
-                              <td class="text-center">
-                                  <button type="button" class="btn btn-danger btn-sm btnEliminarFila">
-                                      <i class="fa fa-trash"></i>
-                                  </button>
-                              </td>
-                          </tr>
-                          <?php
-                      } else {
-                          foreach($detalles as $d) {
-                              ?>
-                              <tr>
-                                  <td>
-                                      <input type="text" name="detalle_descripcion[]" class="form-control"
-                                             value="<?php echo htmlspecialchars($d['descripcion']); ?>" required>
-                                  </td>
-                                  <td>
-                                      <input type="number" name="detalle_cantidad[]" class="form-control input-cant"
-                                             min="1" value="<?php echo (int)$d['cantidad']; ?>" required>
-                                  </td>
-                                  <td>
-                                      <input type="number" name="detalle_precio[]" class="form-control input-precio"
-                                             min="0" step="0.01" value="<?php echo number_format($d['precio_unitario'],2,'.',''); ?>" required>
-                                  </td>
-                                  <td>
-                                      <input type="text" name="detalle_subtotal[]" class="form-control input-subtotal"
-                                             value="<?php echo number_format($d['subtotal'],2,'.',''); ?>" readonly>
-                                  </td>
-                                  <td class="text-center">
-                                      <button type="button" class="btn btn-danger btn-sm btnEliminarFila">
-                                          <i class="fa fa-trash"></i>
-                                      </button>
-                                  </td>
-                              </tr>
-                              <?php
-                          }
-                      }
-                      ?>
-                  </tbody>
-              </table>
-          </div>
+    $qDet = mysqli_query($mysqli,"
+        SELECT * FROM presupuesto_detalles
+        WHERE id_presupuesto = $id
+    ");
+?>
 
-          <button type="button" class="btn btn-default btn-sm" id="btnAgregarFilaEdit">
-              <i class="fa fa-plus"></i> Agregar ítem
-          </button>
+<section class="content-header">
+    <h1>
+        <i class="fa fa-edit icon-title"></i> Editar Presupuesto
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="?module=start"><i class="fa fa-home"></i>Inicio</a></li>
+        <li><a href="?module=presupuesto">Presupuestos</a></li>
+        <li class="active">Editar</li>
+    </ol>
+</section>
 
-          <hr>
+<section class="content">
+<div class="row"><div class="col-md-12">
+<div class="box box-primary"><div class="box-body">
 
-          <!-- TOTALES -->
-          <div class="form-group">
-              <label class="col-sm-2 control-label">Mano de Obra :</label>
-              <div class="col-sm-3">
-                  <input type="number" step="0.01" min="0"
-                         class="form-control" name="mano_obra" id="mano_obra_edit"
-                         value="<?php echo number_format($cab['mano_obra'],2,'.',''); ?>">
-              </div>
-          </div>
+<form role="form" class="form-horizontal"
+      action="modules/presupuesto/proses.php?accion=actualizar"
+      method="POST" id="formPresupuesto">
 
-          <div class="form-group">
-              <label class="col-sm-2 control-label">Subtotal :</label>
-              <div class="col-sm-3">
-                  <input type="text" class="form-control" name="subtotal" id="subtotal_edit"
-                         value="<?php echo number_format($cab['subtotal'],2,'.',''); ?>" readonly>
-              </div>
-          </div>
+    <input type="hidden" name="id_presupuesto" value="<?= $cab['id_presupuesto']; ?>">
 
-          <div class="form-group">
-              <label class="col-sm-2 control-label">Total :</label>
-              <div class="col-sm-3">
-                  <input type="text" class="form-control" name="total" id="total_edit"
-                         value="<?php echo number_format($cab['total'],2,'.',''); ?>" readonly>
-              </div>
-          </div>
+    <h4><strong>Datos del Diagnóstico / Cliente</strong></h4>
+    <hr>
 
-          <!-- ESTADO -->
-          <div class="form-group">
-              <label class="col-sm-2 control-label">Estado :</label>
-              <div class="col-sm-3">
-                  <select name="estado" class="form-control" required>
-                      <?php
-                      $estados = ['Pendiente','Enviado','Aprobado','Rechazado'];
-                      foreach($estados as $e){
-                          $sel = ($e == $cab['estado']) ? "selected" : "";
-                          echo "<option value='$e' $sel>$e</option>";
-                      }
-                      ?>
-                  </select>
-              </div>
-          </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Fecha Presupuesto :</label>
+        <div class="col-sm-3">
+            <input type="date" class="form-control" 
+                   value="<?= substr($cab['fecha_presupuesto'],0,10); ?>" readonly>
+        </div>
+    </div>
 
-          <!-- OBSERVACIONES -->
-          <div class="form-group">
-              <label class="col-sm-2 control-label">Observaciones :</label>
-              <div class="col-sm-6">
-                  <textarea class="form-control" name="observaciones" rows="3"><?php
-                      echo htmlspecialchars($cab['observaciones']);
-                  ?></textarea>
-              </div>
-          </div>
+    <!-- Diagnóstico (solo lectura, pero guardamos id oculto) -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Diagnóstico :</label>
+        <div class="col-sm-6">
+            <input type="text" class="form-control"
+                   value="#<?= $cab['id_diagnostico']; ?> - <?= $cab['cli_razon_social']; ?> - <?= $cab['equipo_modelo']; ?>" readonly>
+            <input type="hidden" name="id_diagnostico" value="<?= $cab['id_diagnostico']; ?>">
+        </div>
+    </div>
 
-          <div class="box-footer">
-              <div class="col-sm-offset-2 col-sm-10">
-                  <input type="submit" class="btn btn-primary btn-submit" value="Guardar"
-                         onclick="return confirm('¿Desea modificar los datos del presupuesto?')">
-                  <a href="?module=presupuesto" class="btn btn-default btn-reset">Cancelar</a>
-              </div>
-          </div>
+    <!-- Cliente -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Cliente :</label>
+        <div class="col-sm-6">
+            <input type="text" class="form-control" 
+                   value="<?= $cab['cli_razon_social']; ?>" readonly>
+        </div>
+    </div>
 
-        </form>
+    <!-- Equipo / Modelo -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Equipo :</label>
+        <div class="col-sm-3">
+            <input type="text" class="form-control" 
+                   value="<?= $cab['tipo_descrip']; ?>" readonly>
+        </div>
+        <label class="col-sm-1 control-label">Modelo :</label>
+        <div class="col-sm-3">
+            <input type="text" class="form-control" 
+                   value="<?= $cab['equipo_modelo']; ?>" readonly>
+        </div>
+    </div>
 
-      </div></div></div></div>
+    <!-- DETALLES -->
+    <h4><strong>Detalles del Presupuesto</strong></h4>
+    <hr>
 
-      <script>
-      function recalcularFilaEdit($tr){
-          let cant   = parseFloat($tr.find(".input-cant").val())   || 0;
-          let precio = parseFloat($tr.find(".input-precio").val()) || 0;
-          let sub    = cant * precio;
-          $tr.find(".input-subtotal").val( sub.toFixed(2) );
-      }
-
-      function recalcularTotalesEdit(){
-          let subtotal = 0;
-          $("#tbodyDetallesEdit .input-subtotal").each(function(){
-              subtotal += parseFloat($(this).val()) || 0;
-          });
-          $("#subtotal_edit").val( subtotal.toFixed(2) );
-
-          let mano = parseFloat($("#mano_obra_edit").val()) || 0;
-          let total = subtotal + mano;
-          $("#total_edit").val( total.toFixed(2) );
-      }
-
-      $(document).ready(function(){
-
-          // Recalcular al cargar
-          $("#tbodyDetallesEdit tr").each(function(){
-              recalcularFilaEdit($(this));
-          });
-          recalcularTotalesEdit();
-
-          $(document).on("keyup change", "#tbodyDetallesEdit .input-cant, #tbodyDetallesEdit .input-precio", function(){
-              let $tr = $(this).closest("tr");
-              recalcularFilaEdit($tr);
-              recalcularTotalesEdit();
-          });
-
-          $("#mano_obra_edit").on("keyup change", function(){
-              recalcularTotalesEdit();
-          });
-
-          $("#btnAgregarFilaEdit").click(function(){
-              let fila = `
+    <div class="table-responsive">
+        <table class="table table-bordered" id="tablaDetalles">
+            <thead>
+                <tr class="bg-info">
+                    <th style="width: 40%;">Descripción</th>
+                    <th style="width: 10%;">Cantidad</th>
+                    <th style="width: 15%;">Precio Unitario</th>
+                    <th style="width: 15%;">Subtotal</th>
+                    <th style="width: 15%;">(Ref. libre)</th>
+                    <th style="width: 5%;"></th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php 
+            $hay_det = false;
+            while($det = mysqli_fetch_assoc($qDet)): 
+                $hay_det = true;
+            ?>
                 <tr>
-                    <td><input type="text" name="detalle_descripcion[]" class="form-control" required></td>
-                    <td><input type="number" name="detalle_cantidad[]" class="form-control input-cant" min="1" value="1" required></td>
-                    <td><input type="number" name="detalle_precio[]" class="form-control input-precio" min="0" step="0.01" value="0.00" required></td>
-                    <td><input type="text" name="detalle_subtotal[]" class="form-control input-subtotal" value="0.00" readonly></td>
+                    <td>
+                        <input type="text" name="detalle_descripcion[]" 
+                               class="form-control desc"
+                               value="<?= htmlspecialchars($det['descripcion'], ENT_QUOTES, 'UTF-8'); ?>">
+                    </td>
+                    <td>
+                        <input type="number" min="1"
+                               name="detalle_cantidad[]" 
+                               class="form-control cant"
+                               value="<?= $det['cantidad']; ?>">
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" min="0"
+                               name="detalle_precio[]" 
+                               class="form-control precio"
+                               value="<?= $det['precio_unitario']; ?>">
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" min="0"
+                               name="detalle_subtotal[]" 
+                               class="form-control subtotal"
+                               value="<?= $det['subtotal']; ?>"
+                               readonly>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control" placeholder="(opcional)">
+                    </td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm btnEliminarFila">
+                        <button type="button" class="btn btn-danger btn-sm btnQuitarFila">
                             <i class="fa fa-trash"></i>
                         </button>
                     </td>
-                </tr>`;
-              $("#tbodyDetallesEdit").append(fila);
-          });
+                </tr>
+            <?php endwhile; ?>
 
-          $(document).on("click", ".btnEliminarFila", function(){
-              let filas = $("#tbodyDetallesEdit tr").length;
-              if(filas <= 1){
-                  alert("Debe existir al menos una fila.");
-                  return;
-              }
-              $(this).closest("tr").remove();
-              recalcularTotalesEdit();
-          });
+            <?php if(!$hay_det): ?>
+                <tr>
+                    <td><input type="text" name="detalle_descripcion[]" class="form-control desc"></td>
+                    <td><input type="number" min="1" name="detalle_cantidad[]" class="form-control cant" value="1"></td>
+                    <td><input type="number" step="0.01" min="0" name="detalle_precio[]" class="form-control precio"></td>
+                    <td><input type="number" step="0.01" min="0" name="detalle_subtotal[]" class="form-control subtotal" readonly></td>
+                    <td><input type="text" class="form-control" placeholder="(opcional)"></td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm btnQuitarFila">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            <?php endif; ?>
 
-      });
-      </script>
+            </tbody>
+        </table>
+    </div>
 
-    </section>
+    <button type="button" id="btnAgregarFila" class="btn btn-default">
+        <i class="fa fa-plus"></i> Agregar línea
+    </button>
+
+    <hr>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Mano de Obra :</label>
+        <div class="col-sm-2">
+            <input type="number" step="0.01" min="0"
+                   name="mano_obra" id="mano_obra" class="form-control"
+                   value="<?= $cab['mano_obra']; ?>">
+        </div>
+
+        <label class="col-sm-2 control-label">Subtotal :</label>
+        <div class="col-sm-2">
+            <input type="number" step="0.01" min="0"
+                   name="subtotal" id="subtotal" class="form-control"
+                   value="<?= $cab['subtotal']; ?>" readonly>
+        </div>
+
+        <label class="col-sm-1 control-label">Total :</label>
+        <div class="col-sm-2">
+            <input type="number" step="0.01" min="0"
+                   name="total" id="total" class="form-control"
+                   value="<?= $cab['total']; ?>" readonly>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">Observaciones :</label>
+        <div class="col-sm-6">
+            <textarea name="observaciones" class="form-control" rows="3"><?= htmlspecialchars($cab['observaciones'], ENT_QUOTES, 'UTF-8'); ?></textarea>
+        </div>
+    </div>
+
+    <div class="box-footer">
+        <div class="col-sm-offset-2 col-sm-10">
+            <button type="submit" class="btn btn-primary"
+                    onclick="return confirm('¿Guardar cambios del presupuesto?')">
+                Guardar
+            </button>
+            <a href="?module=presupuesto" class="btn btn-default">Cancelar</a>
+        </div>
+    </div>
+
+</form>
+
+</div></div></div></div>
+</section>
+
+<script>
+function recalcularFila($tr){
+    let cant   = parseFloat($tr.find(".cant").val())   || 0;
+    let precio = parseFloat($tr.find(".precio").val()) || 0;
+    let sub    = cant * precio;
+    $tr.find(".subtotal").val(sub.toFixed(2));
+    recalcularTotales();
+}
+
+function recalcularTotales(){
+    let subtotal = 0;
+    $("#tablaDetalles tbody tr").each(function(){
+        let s = parseFloat($(this).find(".subtotal").val()) || 0;
+        subtotal += s;
+    });
+    $("#subtotal").val(subtotal.toFixed(2));
+
+    let mano = parseFloat($("#mano_obra").val()) || 0;
+    let total = subtotal + mano;
+    $("#total").val(total.toFixed(2));
+}
+
+$(document).on("input", ".cant, .precio", function(){
+    let $tr = $(this).closest("tr");
+    recalcularFila($tr);
+});
+
+$("#btnAgregarFila").click(function(){
+    let $fila = $("#tablaDetalles tbody tr:first").clone();
+
+    $fila.find("input").val("");
+    $fila.find(".cant").val(1);
+
+    $("#tablaDetalles tbody").append($fila);
+});
+
+$(document).on("click", ".btnQuitarFila", function(){
+    let filas = $("#tablaDetalles tbody tr").length;
+    if(filas <= 1){
+        let $tr = $("#tablaDetalles tbody tr:first");
+        $tr.find("input").val("");
+        $tr.find(".cant").val(1);
+        recalcularFila($tr);
+    } else {
+        $(this).closest("tr").remove();
+        recalcularTotales();
+    }
+});
+
+$("#mano_obra").on("input", function(){
+    recalcularTotales();
+});
+
+// Recalcular al cargar
+$(document).ready(function(){
+    $("#tablaDetalles tbody tr").each(function(){
+        recalcularFila($(this));
+    });
+});
+</script>
 
 <?php } ?>

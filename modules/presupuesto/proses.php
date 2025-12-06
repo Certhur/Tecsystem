@@ -4,12 +4,11 @@ require_once "../../config/database.php";
 
 $accion = $_REQUEST['accion'] ?? '';
 
-/* ============================================================
-   ACCIONES QUE RESPONDEN JSON (AJAX)
-============================================================ */
 $acciones_json = [
-    "consultarDiagnosticosFinalizados",
-    "datosDiagnostico"
+    "datos_diagnostico",
+    "cambiar_estado",
+    "archivar",
+    "desarchivar"
 ];
 
 if (in_array($accion, $acciones_json)) {
@@ -21,123 +20,69 @@ function json_out($data){
     exit;
 }
 
-/* ============================================================
-   CONSULTAR DIAGNÓSTICOS FINALIZADOS (PARA SELECT)
-============================================================ */
+/* =========================================================
+   OBTENER DATOS DEL DIAGNÓSTICO (AJAX)
+========================================================= */
 
-if ($accion == "consultarDiagnosticosFinalizados") {
-
-    $sql = mysqli_query($mysqli, "
-        SELECT dg.id_diagnostico,
-               re.equipo_modelo,
-               cl.cli_razon_social
-        FROM diagnostico dg
-        LEFT JOIN recepcion_equipo re ON dg.id_recepcion_equipo = re.id_recepcion_equipo
-        LEFT JOIN clientes cl         ON re.id_cliente         = cl.id_cliente
-        WHERE dg.estado_diagnostico = 'Finalizado'
-        ORDER BY dg.id_diagnostico DESC
-    ");
-
-    $data = [];
-    while($r = mysqli_fetch_assoc($sql)){
-        $texto = "ID #".$r['id_diagnostico']." - ".
-                 $r['cli_razon_social']." - ".
-                 $r['equipo_modelo'];
-
-        $data[] = [
-            "id_diagnostico" => $r['id_diagnostico'],
-            "texto"          => $texto
-        ];
-    }
-
-    json_out($data);
-}
-
-/* ============================================================
-   OBTENER DATOS COMPLETOS DEL DIAGNÓSTICO SELECCIONADO
-   (CLIENTE + EQUIPO)
-============================================================ */
-
-if ($accion == "datosDiagnostico") {
-
+if ($accion == 'datos_diagnostico') {
     $id = intval($_GET['id'] ?? 0);
-    if ($id <= 0) json_out(null);
+    if($id <= 0) json_out(null);
 
-    $sql = mysqli_query($mysqli, "
+    $q = mysqli_query($mysqli,"
         SELECT dg.id_diagnostico,
                re.equipo_modelo,
                re.equipo_descripcion,
-               m.marca_descrip,
-               te.tipo_descrip,
                cl.cli_razon_social,
-               cl.ci_ruc,
-               cl.cli_telefono,
-               cl.cli_direccion
+               te.tipo_descrip
         FROM diagnostico dg
         LEFT JOIN recepcion_equipo re ON dg.id_recepcion_equipo = re.id_recepcion_equipo
-        LEFT JOIN clientes cl         ON re.id_cliente         = cl.id_cliente
-        LEFT JOIN marcas m            ON re.id_marca           = m.id_marca
-        LEFT JOIN tipo_equipo te      ON re.id_tipo_equipo     = te.id_tipo_equipo
+        LEFT JOIN clientes cl         ON re.id_cliente = cl.id_cliente
+        LEFT JOIN tipo_equipo te      ON re.id_tipo_equipo = te.id_tipo_equipo
         WHERE dg.id_diagnostico = $id
-        LIMIT 1
-    ");
+    ") or die(mysqli_error($mysqli));
 
-    $data = mysqli_fetch_assoc($sql);
+    $data = mysqli_fetch_assoc($q);
     json_out($data ?: null);
 }
 
-/* ============================================================
-   INSERTAR PRESUPUESTO
-============================================================ */
+/* =========================================================
+   CAMBIAR ESTADO PRESUPUESTO (AJAX)
+========================================================= */
 
-if ($accion == "insertar") {
+if ($accion == 'cambiar_estado') {
+    $id     = intval($_POST['id_presupuesto'] ?? 0);
+    $estado = $_POST['estado'] ?? '';
+
+    $validos = ["Pendiente","Enviado","Aprobado","Rechazado"];
+
+    if($id <= 0 || !in_array($estado,$validos)){
+        json_out(["status"=>"error","message"=>"Datos inválidos"]);
+    }
+
+    $sql = "UPDATE presupuesto
+            SET estado = '".mysqli_real_escape_string($mysqli,$estado)."'
+            WHERE id_presupuesto = $id";
+
+    if(mysqli_query($mysqli,$sql)){
+        json_out(["status"=>"ok"]);
+    } else {
+        json_out(["status"=>"error","message"=>"Error al guardar"]);
+    }
+}
+
+/* =========================================================
+   INSERTAR PRESUPUESTO + DETALLES
+========================================================= */
+
+if ($accion == 'insertar') {
 
     $id_diagnostico = intval($_POST['id_diagnostico'] ?? 0);
     $mano_obra      = floatval($_POST['mano_obra'] ?? 0);
+    $subtotal       = floatval($_POST['subtotal'] ?? 0);
+    $total          = floatval($_POST['total'] ?? 0);
+    $obs            = mysqli_real_escape_string($mysqli, $_POST['observaciones'] ?? '');
 
-    $desc_arr = $_POST['detalle_descripcion'] ?? [];
-    $cant_arr = $_POST['detalle_cantidad']    ?? [];
-    $prec_arr = $_POST['detalle_precio']      ?? [];
-
-    if ($id_diagnostico <= 0 || count($desc_arr) == 0) {
-        header("Location: ../../main.php?module=presupuesto&alert=4");
-        exit;
-    }
-
-    // Calcular subtotal (lado servidor)
-    $subtotal = 0;
-    $lineas   = [];
-
-    for($i=0; $i<count($desc_arr); $i++){
-        $desc = trim($desc_arr[$i]);
-        if($desc === '') continue;
-
-        $cant = isset($cant_arr[$i]) ? intval($cant_arr[$i]) : 1;
-        if($cant <= 0) $cant = 1;
-
-        $precio = isset($prec_arr[$i]) ? floatval($prec_arr[$i]) : 0;
-        if($precio < 0) $precio = 0;
-
-        $sub = $cant * $precio;
-        $subtotal += $sub;
-
-        $lineas[] = [
-            'descripcion'    => $desc,
-            'cantidad'       => $cant,
-            'precio_unitario'=> $precio,
-            'subtotal'       => $sub
-        ];
-    }
-
-    if (count($lineas) == 0) {
-        header("Location: ../../main.php?module=presupuesto&alert=4");
-        exit;
-    }
-
-    $total = $subtotal + $mano_obra;
-
-    $obs = mysqli_real_escape_string($mysqli, $_POST['observaciones'] ?? '');
-    $usuario = $_SESSION['username'] ?? null;
+    $usuario        = $_SESSION['username'] ?? 'sistema';
 
     $sql = "
         INSERT INTO presupuesto(
@@ -158,164 +103,158 @@ if ($accion == "insertar") {
             $total,
             '$obs',
             'Pendiente',
-            ".($usuario ? "'".mysqli_real_escape_string($mysqli,$usuario)."'" : "NULL").",
+            '$usuario',
             NOW()
-        )
-    ";
+        )";
 
-    if (!mysqli_query($mysqli, $sql)) {
+    if(mysqli_query($mysqli,$sql)){
+        $id_pres = mysqli_insert_id($mysqli);
+
+        // Insertar detalles
+        $desc  = $_POST['detalle_descripcion'] ?? [];
+        $cant  = $_POST['detalle_cantidad'] ?? [];
+        $precio= $_POST['detalle_precio'] ?? [];
+        $sub   = $_POST['detalle_subtotal'] ?? [];
+
+        $num = count($desc);
+
+        for($i=0; $i<$num; $i++){
+            $d = trim($desc[$i]);
+            if($d === '') continue;
+
+            $c  = intval($cant[$i] ?? 0);
+            $pu = floatval($precio[$i] ?? 0);
+            $st = floatval($sub[$i] ?? 0);
+
+            $d_sql = mysqli_real_escape_string($mysqli, $d);
+
+            mysqli_query($mysqli,"
+                INSERT INTO presupuesto_detalles(
+                    id_presupuesto, descripcion, cantidad, precio_unitario, subtotal
+                ) VALUES (
+                    $id_pres, '$d_sql', $c, $pu, $st
+                )
+            ");
+        }
+
+        header("Location: ../../main.php?module=presupuesto&alert=1");
+    } else {
         header("Location: ../../main.php?module=presupuesto&alert=4");
-        exit;
     }
-
-    $id_presupuesto = mysqli_insert_id($mysqli);
-
-    // Insertar detalles
-    foreach($lineas as $ln){
-        $desc_sql = mysqli_real_escape_string($mysqli, $ln['descripcion']);
-        $cant     = $ln['cantidad'];
-        $precio   = $ln['precio_unitario'];
-        $sub      = $ln['subtotal'];
-
-        mysqli_query($mysqli, "
-            INSERT INTO presupuesto_detalle(
-                id_presupuesto,
-                descripcion,
-                cantidad,
-                precio_unitario,
-                subtotal
-            ) VALUES (
-                $id_presupuesto,
-                '$desc_sql',
-                $cant,
-                $precio,
-                $sub
-            )
-        ");
-    }
-
-    header("Location: ../../main.php?module=presupuesto&alert=1");
     exit;
 }
 
-/* ============================================================
-   ACTUALIZAR PRESUPUESTO
-============================================================ */
+/* =========================================================
+   ACTUALIZAR PRESUPUESTO + DETALLES
+========================================================= */
 
-if ($accion == "actualizar") {
+if ($accion == 'actualizar') {
 
     $id_presupuesto = intval($_POST['id_presupuesto'] ?? 0);
+    if($id_presupuesto <= 0){
+        header("Location: ../../main.php?module=presupuesto&alert=4");
+        exit;
+    }
+
     $id_diagnostico = intval($_POST['id_diagnostico'] ?? 0);
+    $mano_obra      = floatval($_POST['mano_obra'] ?? 0);
+    $subtotal       = floatval($_POST['subtotal'] ?? 0);
+    $total          = floatval($_POST['total'] ?? 0);
+    $obs            = mysqli_real_escape_string($mysqli, $_POST['observaciones'] ?? '');
 
-    if($id_presupuesto <= 0 || $id_diagnostico <= 0){
-        header("Location: ../../main.php?module=presupuesto&alert=4");
-        exit;
-    }
-
-    $mano_obra = floatval($_POST['mano_obra'] ?? 0);
-    $estado    = $_POST['estado'] ?? 'Pendiente';
-    $estado_validos = ['Pendiente','Enviado','Aprobado','Rechazado'];
-    if(!in_array($estado, $estado_validos)) $estado = 'Pendiente';
-
-    $desc_arr = $_POST['detalle_descripcion'] ?? [];
-    $cant_arr = $_POST['detalle_cantidad']    ?? [];
-    $prec_arr = $_POST['detalle_precio']      ?? [];
-
-    // Calcular nuevo subtotal
-    $subtotal = 0;
-    $lineas   = [];
-
-    for($i=0; $i<count($desc_arr); $i++){
-        $desc = trim($desc_arr[$i]);
-        if($desc === '') continue;
-
-        $cant = isset($cant_arr[$i]) ? intval($cant_arr[$i]) : 1;
-        if($cant <= 0) $cant = 1;
-
-        $precio = isset($prec_arr[$i]) ? floatval($prec_arr[$i]) : 0;
-        if($precio < 0) $precio = 0;
-
-        $sub = $cant * $precio;
-        $subtotal += $sub;
-
-        $lineas[] = [
-            'descripcion'    => $desc,
-            'cantidad'       => $cant,
-            'precio_unitario'=> $precio,
-            'subtotal'       => $sub
-        ];
-    }
-
-    if (count($lineas) == 0) {
-        header("Location: ../../main.php?module=presupuesto&alert=4");
-        exit;
-    }
-
-    $total = $subtotal + $mano_obra;
-    $obs = mysqli_real_escape_string($mysqli, $_POST['observaciones'] ?? '');
-
-    // Actualizar cabecera
     $sql = "
         UPDATE presupuesto SET
-            mano_obra    = $mano_obra,
-            subtotal     = $subtotal,
-            total        = $total,
-            observaciones= '$obs',
-            estado       = '$estado'
+            id_diagnostico = $id_diagnostico,
+            mano_obra      = $mano_obra,
+            subtotal       = $subtotal,
+            total          = $total,
+            observaciones  = '$obs'
         WHERE id_presupuesto = $id_presupuesto
     ";
 
-    if (!mysqli_query($mysqli, $sql)) {
+    if(mysqli_query($mysqli,$sql)){
+
+        // Borrar detalles antiguos
+        mysqli_query($mysqli,"DELETE FROM presupuesto_detalles WHERE id_presupuesto = $id_presupuesto");
+
+        // Insertar nuevos detalles
+        $desc  = $_POST['detalle_descripcion'] ?? [];
+        $cant  = $_POST['detalle_cantidad'] ?? [];
+        $precio= $_POST['detalle_precio'] ?? [];
+        $sub   = $_POST['detalle_subtotal'] ?? [];
+
+        $num = count($desc);
+
+        for($i=0; $i<$num; $i++){
+            $d = trim($desc[$i]);
+            if($d === '') continue;
+
+            $c  = intval($cant[$i] ?? 0);
+            $pu = floatval($precio[$i] ?? 0);
+            $st = floatval($sub[$i] ?? 0);
+
+            $d_sql = mysqli_real_escape_string($mysqli, $d);
+
+            mysqli_query($mysqli,"
+                INSERT INTO presupuesto_detalles(
+                    id_presupuesto, descripcion, cantidad, precio_unitario, subtotal
+                ) VALUES (
+                    $id_presupuesto, '$d_sql', $c, $pu, $st
+                )
+            ");
+        }
+
+        header("Location: ../../main.php?module=presupuesto&alert=2");
+    } else {
         header("Location: ../../main.php?module=presupuesto&alert=4");
-        exit;
     }
-
-    // Borrar detalles anteriores y volver a insertar
-    mysqli_query($mysqli, "DELETE FROM presupuesto_detalle WHERE id_presupuesto = $id_presupuesto");
-
-    foreach($lineas as $ln){
-        $desc_sql = mysqli_real_escape_string($mysqli, $ln['descripcion']);
-        $cant     = $ln['cantidad'];
-        $precio   = $ln['precio_unitario'];
-        $sub      = $ln['subtotal'];
-
-        mysqli_query($mysqli, "
-            INSERT INTO presupuesto_detalle(
-                id_presupuesto,
-                descripcion,
-                cantidad,
-                precio_unitario,
-                subtotal
-            ) VALUES (
-                $id_presupuesto,
-                '$desc_sql',
-                $cant,
-                $precio,
-                $sub
-            )
-        ");
-    }
-
-    header("Location: ../../main.php?module=presupuesto&alert=2");
     exit;
 }
 
-/* ============================================================
-   ELIMINAR PRESUPUESTO (opcional)
-============================================================ */
+/* =========================================================
+   ELIMINAR PRESUPUESTO (opcional, si luego agregas botón)
+========================================================= */
 
-if ($accion == "eliminar") {
-    $id_presupuesto = intval($_GET['id_presupuesto'] ?? 0);
-    if($id_presupuesto > 0){
-        mysqli_query($mysqli, "DELETE FROM presupuesto_detalle WHERE id_presupuesto = $id_presupuesto");
-        mysqli_query($mysqli, "DELETE FROM presupuesto WHERE id_presupuesto = $id_presupuesto");
+if ($accion == 'eliminar') {
+    $id = intval($_GET['id_presupuesto'] ?? 0);
+    if($id > 0){
+        mysqli_query($mysqli,"DELETE FROM presupuesto_detalles WHERE id_presupuesto = $id");
+        mysqli_query($mysqli,"DELETE FROM presupuesto WHERE id_presupuesto = $id");
         header("Location: ../../main.php?module=presupuesto&alert=3");
-        exit;
     } else {
         header("Location: ../../main.php?module=presupuesto&alert=4");
-        exit;
     }
+    exit;
 }
 
-header("Location: ../../main.php?module=presupuesto");
-exit;
+/* =========================================================
+   ARCHIVAR / DESARCHIVAR (AJAX)
+========================================================= */
+
+if ($accion == 'archivar') {
+    $id = intval($_POST['id_presupuesto'] ?? 0);
+    if($id <= 0) json_out(["status"=>"error"]);
+
+    mysqli_query($mysqli,"
+        UPDATE presupuesto
+        SET estado = 'Archivado'
+        WHERE id_presupuesto = $id
+    ");
+
+    json_out(["status"=>"ok"]);
+}
+
+if ($accion == 'desarchivar') {
+    $id = intval($_POST['id_presupuesto'] ?? 0);
+    if($id <= 0) json_out(["status"=>"error"]);
+
+    mysqli_query($mysqli,"
+        UPDATE presupuesto
+        SET estado = 'Pendiente'
+        WHERE id_presupuesto = $id
+    ");
+
+    json_out(["status"=>"ok"]);
+}
+
+json_out(["error"=>"Acción no reconocida"]);
