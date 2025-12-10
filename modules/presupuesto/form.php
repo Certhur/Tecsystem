@@ -359,7 +359,7 @@ $("#mano_obra").on("input", function(){
     $cab = mysqli_fetch_assoc($qCab);
 
     $qDet = mysqli_query($mysqli,"
-        SELECT * FROM presupuesto_detalles
+        SELECT * FROM presupuesto_detalle
         WHERE id_presupuesto = $id
     ");
 ?>

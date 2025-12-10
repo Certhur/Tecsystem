@@ -175,7 +175,7 @@ if ($accion == 'actualizar') {
     if(mysqli_query($mysqli,$sql)){
 
         // Borrar detalles antiguos
-        mysqli_query($mysqli,"DELETE FROM presupuesto_detalles WHERE id_presupuesto = $id_presupuesto");
+        mysqli_query($mysqli,"DELETE FROM presupuesto_detalle WHERE id_presupuesto = $id_presupuesto");
 
         // Insertar nuevos detalles
         $desc  = $_POST['detalle_descripcion'] ?? [];
@@ -218,7 +218,7 @@ if ($accion == 'actualizar') {
 if ($accion == 'eliminar') {
     $id = intval($_GET['id_presupuesto'] ?? 0);
     if($id > 0){
-        mysqli_query($mysqli,"DELETE FROM presupuesto_detalles WHERE id_presupuesto = $id");
+        mysqli_query($mysqli,"DELETE FROM presupuesto_detalle WHERE id_presupuesto = $id");
         mysqli_query($mysqli,"DELETE FROM presupuesto WHERE id_presupuesto = $id");
         header("Location: ../../main.php?module=presupuesto&alert=3");
     } else {
