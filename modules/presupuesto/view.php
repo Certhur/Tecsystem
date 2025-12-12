@@ -22,6 +22,10 @@ include "config/database.php";
            href="?module=presupuesto_archivados">
            <i class="fa fa-archive"></i> Archivados
         </a>
+
+         <a class="btn btn-warning btn-social pull-right" style="margin-right:10px;" href="modules/presupuesto/reporte_presupuesto.php" target="_blank">
+            <i class="fa fa-print"></i> IMPRIMIR PRESUPUESTOS
+        </a>
     </h1>
 </section>
 

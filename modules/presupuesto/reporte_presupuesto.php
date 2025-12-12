@@ -6,8 +6,8 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 $options = new Options();
+$options->set('isHtml5ParserEnabled', true);
 $options->set('isRemoteEnabled', true);
-
 $dompdf = new Dompdf($options);
 
 // Consulta
