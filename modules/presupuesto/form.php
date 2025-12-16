@@ -4,10 +4,10 @@ include "config/database.php";
 $form = $_GET['form'] ?? 'add';
 
 /* ======================================================
-   OBTENER LISTAS REFERENCIALES
+   CONSULTAS GENERALES (Para cargar los Selects)
 ====================================================== */
 
-// Diagnósticos finalizados (para ADD)
+// 1. Diagnósticos Finalizados (Solo se usa en ADD)
 $lista_diagnosticos = mysqli_query($mysqli,"
     SELECT dg.id_diagnostico,
            re.id_recepcion_equipo,
@@ -20,7 +20,7 @@ $lista_diagnosticos = mysqli_query($mysqli,"
     ORDER BY dg.id_diagnostico DESC
 ");
 
-// Productos (repuestos)
+// 2. Productos (Repuestos) - Para llenar el menú desplegable
 $lista_productos = mysqli_query($mysqli,"
     SELECT id_producto, p_descrip, p_precio_servicio
     FROM productos
@@ -28,21 +28,17 @@ $lista_productos = mysqli_query($mysqli,"
     ORDER BY p_descrip ASC
 ");
 
-// Servicios
+// 3. Servicios - Para llenar el menú desplegable
 $lista_servicios = mysqli_query($mysqli,"
     SELECT id_tipo_servicio, tipo_servicio_descrip, tipo_servicio_monto
     FROM tipo_servicio
     WHERE tipo_servicio_estado = 1
     ORDER BY tipo_servicio_descrip ASC
 ");
-
 ?>
 
 <?php if ($form == 'add') { ?>
 
-<!-- ==========================================
-     AGREGAR PRESUPUESTO
-========================================== -->
 <section class="content-header">
     <h1>
         <i class="fa fa-edit icon-title"></i> Agregar Presupuesto
@@ -62,11 +58,9 @@ $lista_servicios = mysqli_query($mysqli,"
       action="modules/presupuesto/proses.php?accion=insertar"
       method="POST" id="formPresupuesto">
 
-    <!-- ================= DATOS CABECERA ================ -->
     <h4><strong>Datos del Diagnóstico / Cliente</strong></h4>
     <hr>
 
-    <!-- FECHA -->
     <div class="form-group">
         <label class="col-sm-2 control-label">Fecha Presupuesto :</label>
         <div class="col-sm-3">
@@ -75,7 +69,6 @@ $lista_servicios = mysqli_query($mysqli,"
         </div>
     </div>
 
-    <!-- DIAGNÓSTICO -->
     <div class="form-group">
         <label class="col-sm-2 control-label">Diagnóstico :</label>
         <div class="col-sm-6">
@@ -90,7 +83,6 @@ $lista_servicios = mysqli_query($mysqli,"
         </div>
     </div>
 
-    <!-- CLIENTE -->
     <div class="form-group">
         <label class="col-sm-2 control-label">Cliente :</label>
         <div class="col-sm-6">
@@ -98,20 +90,17 @@ $lista_servicios = mysqli_query($mysqli,"
         </div>
     </div>
 
-    <!-- EQUIPO / MODELO -->
     <div class="form-group">
         <label class="col-sm-2 control-label">Equipo :</label>
         <div class="col-sm-3">
             <input type="text" class="form-control" id="equipo" readonly>
         </div>
-
         <label class="col-sm-1 control-label">Modelo :</label>
         <div class="col-sm-3">
             <input type="text" class="form-control" id="modelo" readonly>
         </div>
     </div>
 
-    <!-- ================= DETALLES ================ -->
     <h4><strong>Detalles del Presupuesto</strong></h4>
     <hr>
 
@@ -119,35 +108,20 @@ $lista_servicios = mysqli_query($mysqli,"
         <table class="table table-bordered" id="tablaDetalles">
             <thead>
                 <tr class="bg-info">
-                    <th style="width: 35%;">Descripción</th>
-                    <th style="width: 10%;">Cantidad</th>
-                    <th style="width: 15%;">Precio Unitario</th>
+                    <th style="width: 30%;">Ítem Ref. (Seleccionar)</th>
+                    <th style="width: 35%;">Descripción (Automático)</th>
+                    <th style="width: 10%;">Cant.</th>
+                    <th style="width: 15%;">Precio Unit. (Auto)</th>
                     <th style="width: 15%;">Subtotal</th>
-                    <th style="width: 25%;">Ítem Ref.</th>
                     <th style="width: 5%;"></th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Fila inicial -->
                 <tr>
                     <td>
-                        <input type="text" name="detalle_descripcion[]" class="form-control desc">
-                    </td>
-                    <td>
-                        <input type="number" min="1" value="1" 
-                               name="detalle_cantidad[]" class="form-control cant">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" min="0"
-                               name="detalle_precio[]" class="form-control precio">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" min="0"
-                               name="detalle_subtotal[]" class="form-control subtotal" readonly>
-                    </td>
-                    <td>
-                        <select class="form-control selItem">
-                            <option value="" data-precio="0" data-desc="">-- Seleccionar referencia --</option>
+                        <select class="form-control selItem" name="detalle_item[]" required>
+                            <option value="" data-precio="0" data-desc="">-- Seleccionar --</option>
+                            
                             <optgroup label="Servicios">
                                 <?php mysqli_data_seek($lista_servicios, 0); ?>
                                 <?php while($s = mysqli_fetch_assoc($lista_servicios)): ?>
@@ -160,7 +134,8 @@ $lista_servicios = mysqli_query($mysqli,"
                                     </option>
                                 <?php endwhile; ?>
                             </optgroup>
-                            <optgroup label="Productos / Repuestos">
+
+                            <optgroup label="Productos">
                                 <?php mysqli_data_seek($lista_productos, 0); ?>
                                 <?php while($p = mysqli_fetch_assoc($lista_productos)): ?>
                                     <option 
@@ -173,6 +148,18 @@ $lista_servicios = mysqli_query($mysqli,"
                                 <?php endwhile; ?>
                             </optgroup>
                         </select>
+                    </td>
+                    <td>
+                        <input type="text" name="detalle_descripcion[]" class="form-control desc" readonly>
+                    </td>
+                    <td>
+                        <input type="number" min="1" value="1" name="detalle_cantidad[]" class="form-control cant">
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" min="0" name="detalle_precio[]" class="form-control precio" readonly>
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" min="0" name="detalle_subtotal[]" class="form-control subtotal" readonly>
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-danger btn-sm btnQuitarFila">
@@ -190,7 +177,6 @@ $lista_servicios = mysqli_query($mysqli,"
 
     <hr>
 
-    <!-- ================= TOTALES ================ -->
     <div class="form-group">
         <label class="col-sm-2 control-label">Mano de Obra :</label>
         <div class="col-sm-2">
@@ -211,7 +197,6 @@ $lista_servicios = mysqli_query($mysqli,"
         </div>
     </div>
 
-    <!-- OBSERVACIONES -->
     <div class="form-group">
         <label class="col-sm-2 control-label">Observaciones :</label>
         <div class="col-sm-6">
@@ -219,7 +204,6 @@ $lista_servicios = mysqli_query($mysqli,"
         </div>
     </div>
 
-    <!-- BOTONES -->
     <div class="box-footer">
         <div class="col-sm-offset-2 col-sm-10">
             <button type="submit" class="btn btn-primary"
@@ -231,117 +215,18 @@ $lista_servicios = mysqli_query($mysqli,"
     </div>
 
 </form>
-
 </div></div></div></div>
 </section>
 
-<script>
-// ===============================
-// CARGAR DATOS DEL DIAGNÓSTICO
-// ===============================
-$("#id_diagnostico").change(function(){
-    let id = $(this).val();
-    if(!id) return;
-
-    $.getJSON("modules/presupuesto/proses.php?accion=datos_diagnostico&id="+id,
-        function(d){
-            if(d){
-                $("#cliente").val(d.cli_razon_social);
-                $("#equipo").val(d.tipo_descrip);
-                $("#modelo").val(d.equipo_modelo);
-            }
-        }
-    );
-});
-
-// ===============================
-// FUNCIONES DETALLES
-// ===============================
-function recalcularFila($tr){
-    let cant   = parseFloat($tr.find(".cant").val())   || 0;
-    let precio = parseFloat($tr.find(".precio").val()) || 0;
-    let sub    = cant * precio;
-    $tr.find(".subtotal").val(sub.toFixed(2));
-    recalcularTotales();
-}
-
-function recalcularTotales(){
-    let subtotal = 0;
-    $("#tablaDetalles tbody tr").each(function(){
-        let s = parseFloat($(this).find(".subtotal").val()) || 0;
-        subtotal += s;
-    });
-    $("#subtotal").val(subtotal.toFixed(2));
-
-    let mano = parseFloat($("#mano_obra").val()) || 0;
-    let total = subtotal + mano;
-    $("#total").val(total.toFixed(2));
-}
-
-// Cambio en cantidad / precio
-$(document).on("input", ".cant, .precio", function(){
-    let $tr = $(this).closest("tr");
-    recalcularFila($tr);
-});
-
-// Selección de item (servicio / producto)
-$(document).on("change", ".selItem", function(){
-    let opt = $(this).find("option:selected");
-    let desc = opt.data("desc") || "";
-    let precio = parseFloat(opt.data("precio")) || 0;
-    let $tr = $(this).closest("tr");
-
-    if(desc){
-        $tr.find(".desc").val(desc);
-    }
-    if(precio > 0){
-        $tr.find(".precio").val(precio.toFixed(2));
-    }
-    if(!$tr.find(".cant").val()){
-        $tr.find(".cant").val(1);
-    }
-    recalcularFila($tr);
-});
-
-// Agregar fila
-$("#btnAgregarFila").click(function(){
-    let $fila = $("#tablaDetalles tbody tr:first").clone();
-
-    $fila.find("input").val("");
-    $fila.find(".cant").val(1);
-    $fila.find(".selItem").val("");
-
-    $("#tablaDetalles tbody").append($fila);
-});
-
-// Quitar fila
-$(document).on("click", ".btnQuitarFila", function(){
-    let filas = $("#tablaDetalles tbody tr").length;
-    if(filas <= 1){
-        // limpiar en vez de eliminar
-        let $tr = $("#tablaDetalles tbody tr:first");
-        $tr.find("input").val("");
-        $tr.find(".cant").val(1);
-        $tr.find(".selItem").val("");
-        recalcularFila($tr);
-    } else {
-        $(this).closest("tr").remove();
-        recalcularTotales();
-    }
-});
-
-// Cambio en mano de obra
-$("#mano_obra").on("input", function(){
-    recalcularTotales();
-});
-</script>
-
 <?php } elseif ($form == 'edit') { 
 
-    // ================== EDITAR =======================
+    /* ==========================================
+       MODO: EDITAR PRESUPUESTO
+    ========================================== */
     $id = intval($_GET['id'] ?? 0);
     if($id <= 0){ echo "ID inválido"; exit; }
 
+    // 1. Consulta Cabecera
     $qCab = mysqli_query($mysqli,"
         SELECT p.*, 
                dg.id_recepcion_equipo,
@@ -358,15 +243,28 @@ $("#mano_obra").on("input", function(){
     ");
     $cab = mysqli_fetch_assoc($qCab);
 
-    $qDet = mysqli_query($mysqli,"
-        SELECT * FROM presupuesto_detalle
-        WHERE id_presupuesto = $id
-    ");
+    // 2. Consulta Detalles
+    $query_detalles = "SELECT * FROM presupuesto_detalle WHERE id_presupuesto = $id";
+    $res_detalles = mysqli_query($mysqli, $query_detalles);
+
+    // Guardamos en array para recorrerlo en el HTML
+    $filas_a_mostrar = [];
+    if (mysqli_num_rows($res_detalles) > 0) {
+        while ($row = mysqli_fetch_assoc($res_detalles)) {
+            $filas_a_mostrar[] = $row;
+        }
+    } else {
+        // Fila vacía por defecto si no hay detalles
+        $filas_a_mostrar[] = [
+            'descripcion' => '', 'cantidad' => 1, 'precio_unitario' => 0, 
+            'subtotal' => 0, 'id_tipo_servicio' => null, 'id_producto' => null
+        ];
+    }
 ?>
 
 <section class="content-header">
     <h1>
-        <i class="fa fa-edit icon-title"></i> Editar Presupuesto
+        <i class="fa fa-edit icon-title"></i> Editar Presupuesto #<?= $id; ?>
     </h1>
     <ol class="breadcrumb">
         <li><a href="?module=start"><i class="fa fa-home"></i>Inicio</a></li>
@@ -396,17 +294,15 @@ $("#mano_obra").on("input", function(){
         </div>
     </div>
 
-    <!-- Diagnóstico (solo lectura, pero guardamos id oculto) -->
     <div class="form-group">
         <label class="col-sm-2 control-label">Diagnóstico :</label>
         <div class="col-sm-6">
             <input type="text" class="form-control"
-                   value="#<?= $cab['id_diagnostico']; ?> - <?= $cab['cli_razon_social']; ?> - <?= $cab['equipo_modelo']; ?>" readonly>
+                   value="#<?= $cab['id_diagnostico']; ?> - <?= $cab['cli_razon_social']; ?>" readonly>
             <input type="hidden" name="id_diagnostico" value="<?= $cab['id_diagnostico']; ?>">
         </div>
     </div>
 
-    <!-- Cliente -->
     <div class="form-group">
         <label class="col-sm-2 control-label">Cliente :</label>
         <div class="col-sm-6">
@@ -415,21 +311,17 @@ $("#mano_obra").on("input", function(){
         </div>
     </div>
 
-    <!-- Equipo / Modelo -->
     <div class="form-group">
         <label class="col-sm-2 control-label">Equipo :</label>
         <div class="col-sm-3">
-            <input type="text" class="form-control" 
-                   value="<?= $cab['tipo_descrip']; ?>" readonly>
+            <input type="text" class="form-control" value="<?= $cab['tipo_descrip']; ?>" readonly>
         </div>
         <label class="col-sm-1 control-label">Modelo :</label>
         <div class="col-sm-3">
-            <input type="text" class="form-control" 
-                   value="<?= $cab['equipo_modelo']; ?>" readonly>
+            <input type="text" class="form-control" value="<?= $cab['equipo_modelo']; ?>" readonly>
         </div>
     </div>
 
-    <!-- DETALLES -->
     <h4><strong>Detalles del Presupuesto</strong></h4>
     <hr>
 
@@ -437,71 +329,95 @@ $("#mano_obra").on("input", function(){
         <table class="table table-bordered" id="tablaDetalles">
             <thead>
                 <tr class="bg-info">
-                    <th style="width: 40%;">Descripción</th>
-                    <th style="width: 10%;">Cantidad</th>
-                    <th style="width: 15%;">Precio Unitario</th>
+                    <th style="width: 30%;">Ítem Ref. (Seleccionar)</th>
+                    <th style="width: 35%;">Descripción (Automático)</th>
+                    <th style="width: 10%;">Cant.</th>
+                    <th style="width: 15%;">Precio Unit. (Auto)</th>
                     <th style="width: 15%;">Subtotal</th>
-                    <th style="width: 15%;">(Ref. libre)</th>
                     <th style="width: 5%;"></th>
                 </tr>
             </thead>
             <tbody>
-            <?php 
-            $hay_det = false;
-            while($det = mysqli_fetch_assoc($qDet)): 
-                $hay_det = true;
-            ?>
-                <tr>
-                    <td>
-                        <input type="text" name="detalle_descripcion[]" 
-                               class="form-control desc"
-                               value="<?= htmlspecialchars($det['descripcion'], ENT_QUOTES, 'UTF-8'); ?>">
-                    </td>
-                    <td>
-                        <input type="number" min="1"
-                               name="detalle_cantidad[]" 
-                               class="form-control cant"
-                               value="<?= $det['cantidad']; ?>">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" min="0"
-                               name="detalle_precio[]" 
-                               class="form-control precio"
-                               value="<?= $det['precio_unitario']; ?>">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" min="0"
-                               name="detalle_subtotal[]" 
-                               class="form-control subtotal"
-                               value="<?= $det['subtotal']; ?>"
-                               readonly>
-                    </td>
-                    <td>
-                        <input type="text" class="form-control" placeholder="(opcional)">
-                    </td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm btnQuitarFila">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            <?php endwhile; ?>
+                <?php foreach($filas_a_mostrar as $d): ?>
+                    
+                    <?php 
+                        // LÓGICA DE RECONSTRUCCIÓN DEL VALOR ("P1" o "S5")
+                        $valor_seleccionado = "";
+                        
+                        // OJO: Aquí usamos 'id_tipo_servicio' como acordamos
+                        if (!empty($d['id_tipo_servicio'])) {
+                            $valor_seleccionado = "S" . $d['id_tipo_servicio'];
+                        } elseif (!empty($d['id_producto'])) {
+                            $valor_seleccionado = "P" . $d['id_producto'];
+                        }
+                    ?>
 
-            <?php if(!$hay_det): ?>
-                <tr>
-                    <td><input type="text" name="detalle_descripcion[]" class="form-control desc"></td>
-                    <td><input type="number" min="1" name="detalle_cantidad[]" class="form-control cant" value="1"></td>
-                    <td><input type="number" step="0.01" min="0" name="detalle_precio[]" class="form-control precio"></td>
-                    <td><input type="number" step="0.01" min="0" name="detalle_subtotal[]" class="form-control subtotal" readonly></td>
-                    <td><input type="text" class="form-control" placeholder="(opcional)"></td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm btnQuitarFila">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            <?php endif; ?>
+                    <tr>
+                        <td>
+                            <select class="form-control selItem" name="detalle_item[]" required>
+                                <option value="" data-precio="0">-- Seleccionar --</option>
+                                
+                                <optgroup label="Servicios">
+                                    <?php mysqli_data_seek($lista_servicios, 0); // Rebobinar lista ?>
+                                    <?php while($s = mysqli_fetch_assoc($lista_servicios)): ?>
+                                        <?php 
+                                            $val_serv = "S" . $s['id_tipo_servicio']; 
+                                            $selected = ($val_serv == $valor_seleccionado) ? 'selected' : '';
+                                        ?>
+                                        <option value="<?= $val_serv; ?>" 
+                                                data-precio="<?= $s['tipo_servicio_monto']; ?>"
+                                                data-desc="<?= htmlspecialchars($s['tipo_servicio_descrip'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                <?= $selected; ?> > 
+                                            <?= $s['tipo_servicio_descrip']; ?> (Serv.)
+                                        </option>
+                                    <?php endwhile; ?>
+                                </optgroup>
 
+                                <optgroup label="Productos">
+                                    <?php mysqli_data_seek($lista_productos, 0); // Rebobinar lista ?>
+                                    <?php while($p = mysqli_fetch_assoc($lista_productos)): ?>
+                                        <?php 
+                                            $val_prod = "P" . $p['id_producto'];
+                                            $selected = ($val_prod == $valor_seleccionado) ? 'selected' : '';
+                                        ?>
+                                        <option value="<?= $val_prod; ?>" 
+                                                data-precio="<?= $p['p_precio_servicio']; ?>"
+                                                data-desc="<?= htmlspecialchars($p['p_descrip'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                <?= $selected; ?> >
+                                            <?= $p['p_descrip']; ?> (Rep.)
+                                        </option>
+                                    <?php endwhile; ?>
+                                </optgroup>
+                            </select>
+                        </td>
+
+                        <td>
+                            <input type="text" name="detalle_descripcion[]" class="form-control desc" 
+                                   value="<?= isset($d['descripcion']) ? $d['descripcion'] : ''; ?>" readonly>
+                        </td>
+
+                        <td>
+                            <input type="number" min="1" name="detalle_cantidad[]" class="form-control cant"
+                                   value="<?= isset($d['cantidad']) ? $d['cantidad'] : 1; ?>">
+                        </td>
+
+                        <td>
+                            <input type="number" step="0.01" min="0" name="detalle_precio[]" class="form-control precio"
+                                   value="<?= isset($d['precio_unitario']) ? $d['precio_unitario'] : 0; ?>" readonly>
+                        </td>
+
+                        <td>
+                            <input type="number" step="0.01" min="0" name="detalle_subtotal[]" class="form-control subtotal" readonly
+                                   value="<?= isset($d['subtotal']) ? $d['subtotal'] : 0; ?>">
+                        </td>
+
+                        <td class="text-center">
+                            <button type="button" class="btn btn-danger btn-sm btnQuitarFila">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
             </tbody>
         </table>
     </div>
@@ -557,7 +473,41 @@ $("#mano_obra").on("input", function(){
 </div></div></div></div>
 </section>
 
+<?php } ?>
+
 <script>
+// 1. CARGAR DATOS DEL DIAGNÓSTICO (Solo ADD)
+$("#id_diagnostico").change(function(){
+    let id = $(this).val();
+    if(!id) return;
+    $.getJSON("modules/presupuesto/proses.php?accion=datos_diagnostico&id="+id, function(d){
+        if(d){
+            $("#cliente").val(d.cli_razon_social);
+            $("#equipo").val(d.tipo_descrip);
+            $("#modelo").val(d.equipo_modelo);
+        }
+    });
+});
+
+// 2. CAMBIO EN SELECT (Llena descripción y precio)
+$(document).on("change", ".selItem", function(){
+    let opt = $(this).find("option:selected");
+    let desc = opt.data("desc") || "";
+    let precio = parseFloat(opt.data("precio")) || 0;
+    let $tr = $(this).closest("tr");
+
+    // Llenar inputs automáticamente
+    if(desc) $tr.find(".desc").val(desc);
+    if(precio > 0) $tr.find(".precio").val(precio.toFixed(2));
+    
+    // Si no hay cantidad, poner 1
+    if(!$tr.find(".cant").val()) $tr.find(".cant").val(1);
+
+    // Recalcular
+    recalcularFila($tr);
+});
+
+// 3. CÁLCULOS MATEMÁTICOS
 function recalcularFila($tr){
     let cant   = parseFloat($tr.find(".cant").val())   || 0;
     let precio = parseFloat($tr.find(".precio").val()) || 0;
@@ -568,37 +518,51 @@ function recalcularFila($tr){
 
 function recalcularTotales(){
     let subtotal = 0;
+    // Sumar todas las filas
     $("#tablaDetalles tbody tr").each(function(){
         let s = parseFloat($(this).find(".subtotal").val()) || 0;
         subtotal += s;
     });
     $("#subtotal").val(subtotal.toFixed(2));
 
+    // Sumar Mano de Obra
     let mano = parseFloat($("#mano_obra").val()) || 0;
     let total = subtotal + mano;
     $("#total").val(total.toFixed(2));
 }
 
-$(document).on("input", ".cant, .precio", function(){
-    let $tr = $(this).closest("tr");
-    recalcularFila($tr);
+// Evento al escribir cantidad o mano de obra
+$(document).on("input", ".cant, #mano_obra", function(){
+    if($(this).hasClass("cant")){
+        recalcularFila($(this).closest("tr"));
+    } else {
+        recalcularTotales();
+    }
 });
 
+// 4. AGREGAR FILA
 $("#btnAgregarFila").click(function(){
+    // Clonamos la primera fila
     let $fila = $("#tablaDetalles tbody tr:first").clone();
-
+    
+    // Limpiamos los valores
     $fila.find("input").val("");
     $fila.find(".cant").val(1);
+    $fila.find(".selItem").val(""); 
 
+    // Agregamos a la tabla
     $("#tablaDetalles tbody").append($fila);
 });
 
+// 5. QUITAR FILA
 $(document).on("click", ".btnQuitarFila", function(){
     let filas = $("#tablaDetalles tbody tr").length;
     if(filas <= 1){
+        // Si es la última, solo limpiamos
         let $tr = $("#tablaDetalles tbody tr:first");
         $tr.find("input").val("");
         $tr.find(".cant").val(1);
+        $tr.find(".selItem").val("");
         recalcularFila($tr);
     } else {
         $(this).closest("tr").remove();
@@ -606,16 +570,10 @@ $(document).on("click", ".btnQuitarFila", function(){
     }
 });
 
-$("#mano_obra").on("input", function(){
-    recalcularTotales();
-});
-
-// Recalcular al cargar
+// 6. INICIALIZAR CÁLCULOS (Para Edit)
 $(document).ready(function(){
     $("#tablaDetalles tbody tr").each(function(){
         recalcularFila($(this));
     });
 });
 </script>
-
-<?php } ?>
