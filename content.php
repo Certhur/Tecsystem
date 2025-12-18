@@ -163,10 +163,22 @@ if(empty($_SESSION["username"]) && empty($_SESSION["password"])){
     }elseif($_GET["module"]=="presupuesto_archivados"){
 
         include "modules/presupuesto/presupuesto_archivados.php";
+
+    }elseif($_GET["module"]=="orden_trabajo"){
+        
+        include "modules/orden_trabajo/view.php";
+
+    }elseif($_GET["module"]=="form_orden_trabajo"){
+        
+        include "modules/orden_trabajo/form.php";
+        
+    }elseif($_GET["module"]=="orden_trabajo_archivados"){
+        
+        include "modules/orden_trabajo/orden_trabajo_archivados.php";
     }
 
 
-    
+
 }
 
 ?>

@@ -1,7 +1,7 @@
 <?php 
 include "config/database.php";
 
-$form = $_GET['form'] ?? 'add';
+
 
 /* ======================================================
    CONSULTAS GENERALES (Para cargar los Selects)
