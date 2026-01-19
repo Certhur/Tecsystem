@@ -175,10 +175,14 @@ if(empty($_SESSION["username"]) && empty($_SESSION["password"])){
     }elseif($_GET["module"]=="orden_trabajo_archivados"){
         
         include "modules/orden_trabajo/orden_trabajo_archivados.php";
-    }
-
-
-
+    }elseif($_GET["module"]=="reparacion"){
+        
+        include "modules/reparacion/view.php";
+    }elseif($_GET["module"]=="form_reparacion"){
+        include "modules/reparacion/form.php";
+    }elseif($_GET["module"]=="reparacion_archivados"){
+        include "modules/reparacion/reparacion_archivados.php";
+    }    
 }
 
 ?>

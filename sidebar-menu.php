@@ -61,6 +61,7 @@ if($_SESSION['permisos_acceso']=='Super Admin'){ ?>
                     <li><a href="?module=diagnostico"><i class="fa fa-circle-o"></i>Diagnostico</a></li>
                     <li><a href="?module=presupuesto"><i class="fa fa-circle-o"></i>Presupuesto</a></li>
                     <li><a href="?module=orden_trabajo"><i class="fa fa-circle-o"></i>Orden de Trabajo</a></li>
+                    <li><a href="?module=reparacion"><i class="fa fa-circle-o"></i>Reparación</a></li>
                 </ul>
             </li>
 
